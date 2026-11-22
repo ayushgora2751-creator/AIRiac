@@ -6,6 +6,7 @@
 # -----------------------------------------------------------------
 # Root Untracked Pollution & Repositories
 # -----------------------------------------------------------------
+/earth.glb
 public-apis/
 node_modules/
 package-lock.json

@@ -6,10 +6,10 @@ import {
 } from '../api/airQuality';
 import { NAQICalculateRequest, NAQICalculateResponse } from '../types/aqi';
 
-export const useLatestAirQuality = (stationCode?: string) => {
+export const useLatestAirQuality = (city = 'Chandigarh', stationCode?: string) => {
   return useQuery<LatestAirQualityResponse, Error>({
-    queryKey: ['airQuality', 'latest', stationCode || 'all'],
-    queryFn: () => airQualityApi.getLatest(stationCode),
+    queryKey: ['airQuality', 'latest', city, stationCode || 'all'],
+    queryFn: () => airQualityApi.getLatest(city, stationCode),
     refetchInterval: 60000,
     staleTime: 30000,
   });

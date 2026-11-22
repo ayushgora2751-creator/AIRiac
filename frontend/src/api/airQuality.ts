@@ -18,8 +18,9 @@ export interface HistoricalSeriesResponse {
 }
 
 export const airQualityApi = {
-  getLatest: async (stationCode?: string): Promise<LatestAirQualityResponse> => {
-    const params = stationCode ? { station_code: stationCode } : {};
+  getLatest: async (city = 'Chandigarh', stationCode?: string): Promise<LatestAirQualityResponse> => {
+    const params: Record<string, string> = { city };
+    if (stationCode) params.station_code = stationCode;
     const response = await apiClient.get<any>('/air-quality/latest/', { params });
     const data = response.data;
 

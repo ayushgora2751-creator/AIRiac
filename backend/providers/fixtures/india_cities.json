@@ -1,0 +1,184 @@
+{
+  "cities": [
+    {
+      "name": "Chandigarh",
+      "state": "Chandigarh UT",
+      "center": [30.7333, 76.7794],
+      "default_zoom": 12,
+      "stations": [
+        { "code": "CH-SEC22-CAAQMS", "name": "Sector 22 CAAQMS", "sector": "Sector 22", "latitude": 30.7259, "longitude": 76.7744, "base_pm25": 82.0, "base_pm10": 150.0 },
+        { "code": "CH-PU-SEC25", "name": "Panjab University, Sector 25", "sector": "Sector 25", "latitude": 30.7510, "longitude": 76.7620, "base_pm25": 68.0, "base_pm10": 125.0 },
+        { "code": "CH-SEC53-CAAQMS", "name": "Sector 53 (Mohali Border)", "sector": "Sector 53", "latitude": 30.7180, "longitude": 76.7320, "base_pm25": 98.0, "base_pm10": 180.0 },
+        { "code": "CH-SEC17-CAAQMS", "name": "Sector 17 City Centre", "sector": "Sector 17", "latitude": 30.7410, "longitude": 76.7850, "base_pm25": 85.0, "base_pm10": 155.0 },
+        { "code": "CH-IND-PH1", "name": "Industrial Area Phase 1", "sector": "Industrial Area", "latitude": 30.7050, "longitude": 76.8010, "base_pm25": 110.0, "base_pm10": 210.0 },
+        { "code": "CH-SUKHNA", "name": "Sukhna Lake Ecological Station", "sector": "Sukhna Lake", "latitude": 30.7420, "longitude": 76.8180, "base_pm25": 52.0, "base_pm10": 95.0 }
+      ]
+    },
+    {
+      "name": "Delhi NCR",
+      "state": "Delhi",
+      "center": [28.6139, 77.2090],
+      "default_zoom": 11,
+      "stations": [
+        { "code": "DL-ANAND-VIHAR", "name": "Anand Vihar CAAQMS", "sector": "East Delhi", "latitude": 28.6476, "longitude": 77.3158, "base_pm25": 195.0, "base_pm10": 340.0 },
+        { "code": "DL-PUNJABI-BAGH", "name": "Punjabi Bagh CAAQMS", "sector": "West Delhi", "latitude": 28.6740, "longitude": 77.1310, "base_pm25": 175.0, "base_pm10": 310.0 },
+        { "code": "DL-MANDIR-MARG", "name": "Mandir Marg Central", "sector": "Central Delhi", "latitude": 28.6364, "longitude": 77.1989, "base_pm25": 140.0, "base_pm10": 260.0 },
+        { "code": "DL-RK-PURAM", "name": "R.K. Puram CAAQMS", "sector": "South Delhi", "latitude": 28.5632, "longitude": 77.1869, "base_pm25": 160.0, "base_pm10": 290.0 },
+        { "code": "DL-IGI-AIRPORT", "name": "IGI Airport T3 Terminal", "sector": "South West Delhi", "latitude": 28.5562, "longitude": 77.1000, "base_pm25": 150.0, "base_pm10": 270.0 },
+        { "code": "DL-LODHI-ROAD", "name": "Lodhi Road IMD Campus", "sector": "South Delhi", "latitude": 28.5880, "longitude": 77.2217, "base_pm25": 130.0, "base_pm10": 235.0 },
+        { "code": "NOIDA-SEC62", "name": "Noida Sector 62", "sector": "Gautam Buddha Nagar", "latitude": 28.6270, "longitude": 77.3620, "base_pm25": 185.0, "base_pm10": 325.0 },
+        { "code": "GGN-SEC51", "name": "Gurugram Sector 51", "sector": "Gurugram", "latitude": 28.4280, "longitude": 77.0720, "base_pm25": 170.0, "base_pm10": 305.0 }
+      ]
+    },
+    {
+      "name": "Mumbai",
+      "state": "Maharashtra",
+      "center": [19.0760, 72.8777],
+      "default_zoom": 11,
+      "stations": [
+        { "code": "MH-BKC", "name": "Bandra Kurla Complex", "sector": "BKC", "latitude": 19.0657, "longitude": 72.8687, "base_pm25": 95.0, "base_pm10": 170.0 },
+        { "code": "MH-COLABA", "name": "Colaba Coastal Observatory", "sector": "South Mumbai", "latitude": 18.9067, "longitude": 72.8147, "base_pm25": 62.0, "base_pm10": 115.0 },
+        { "code": "MH-WORLI", "name": "Worli Sea Face", "sector": "Central Mumbai", "latitude": 19.0160, "longitude": 72.8170, "base_pm25": 78.0, "base_pm10": 140.0 },
+        { "code": "MH-ANDHERI", "name": "Andheri East Chakala", "sector": "Western Suburbs", "latitude": 19.1136, "longitude": 72.8697, "base_pm25": 105.0, "base_pm10": 190.0 },
+        { "code": "MH-BORIVALI", "name": "Borivali National Park Edge", "sector": "North Mumbai", "latitude": 19.2288, "longitude": 72.8541, "base_pm25": 68.0, "base_pm10": 125.0 },
+        { "code": "MH-NAVI-MUMBAI", "name": "Navi Mumbai Vashi", "sector": "Navi Mumbai", "latitude": 19.0771, "longitude": 72.9986, "base_pm25": 88.0, "base_pm10": 160.0 }
+      ]
+    },
+    {
+      "name": "Bengaluru",
+      "state": "Karnataka",
+      "center": [12.9716, 77.5946],
+      "default_zoom": 11,
+      "stations": [
+        { "code": "KA-BTM", "name": "BTM Layout CAAQMS", "sector": "South Bengaluru", "latitude": 12.9166, "longitude": 77.6101, "base_pm25": 54.0, "base_pm10": 98.0 },
+        { "code": "KA-SILK-BOARD", "name": "Central Silk Board Junction", "sector": "Hosur Road", "latitude": 12.9177, "longitude": 77.6238, "base_pm25": 78.0, "base_pm10": 145.0 },
+        { "code": "KA-WHITEFIELD", "name": "Whitefield IT Corridor", "sector": "East Bengaluru", "latitude": 12.9698, "longitude": 77.7499, "base_pm25": 60.0, "base_pm10": 110.0 },
+        { "code": "KA-PEENYA", "name": "Peenya Industrial Area", "sector": "North West", "latitude": 13.0285, "longitude": 77.5197, "base_pm25": 82.0, "base_pm10": 155.0 },
+        { "code": "KA-HEBBAL", "name": "Hebbal Flyover Zone", "sector": "North Bengaluru", "latitude": 13.0358, "longitude": 77.5970, "base_pm25": 64.0, "base_pm10": 118.0 }
+      ]
+    },
+    {
+      "name": "Kolkata",
+      "state": "West Bengal",
+      "center": [22.5726, 88.3639],
+      "default_zoom": 11,
+      "stations": [
+        { "code": "WB-VICTORIA", "name": "Victoria Memorial Green Zone", "sector": "Maidan", "latitude": 22.5448, "longitude": 88.3426, "base_pm25": 88.0, "base_pm10": 155.0 },
+        { "code": "WB-JADAVPUR", "name": "Jadavpur University Zone", "sector": "South Kolkata", "latitude": 22.4989, "longitude": 88.3718, "base_pm25": 112.0, "base_pm10": 198.0 },
+        { "code": "WB-SALT-LAKE", "name": "Salt Lake Sector V", "sector": "Bidhannagar", "latitude": 22.5800, "longitude": 88.4300, "base_pm25": 92.0, "base_pm10": 165.0 },
+        { "code": "WB-RABINDRA-BHARATI", "name": "Rabindra Bharati University", "sector": "North Kolkata", "latitude": 22.6256, "longitude": 88.3842, "base_pm25": 135.0, "base_pm10": 240.0 }
+      ]
+    },
+    {
+      "name": "Hyderabad",
+      "state": "Telangana",
+      "center": [17.3850, 78.4867],
+      "default_zoom": 11,
+      "stations": [
+        { "code": "TS-SANATHNAGAR", "name": "Sanathnagar Industrial CAAQMS", "sector": "Sanathnagar", "latitude": 17.4563, "longitude": 78.4439, "base_pm25": 72.0, "base_pm10": 130.0 },
+        { "code": "TS-HITEC-CITY", "name": "Hitec City / Madhapur", "sector": "Cyberabad", "latitude": 17.4474, "longitude": 78.3762, "base_pm25": 58.0, "base_pm10": 105.0 },
+        { "code": "TS-CHARMINAR", "name": "Charminar Old City", "sector": "South Hyderabad", "latitude": 17.3616, "longitude": 78.4747, "base_pm25": 84.0, "base_pm10": 150.0 },
+        { "code": "TS-BOLLARAM", "name": "IDA Bollaram", "sector": "Industrial Corridor", "latitude": 17.5500, "longitude": 78.3200, "base_pm25": 102.0, "base_pm10": 185.0 }
+      ]
+    },
+    {
+      "name": "Chennai",
+      "state": "Tamil Nadu",
+      "center": [13.0827, 80.2707],
+      "default_zoom": 11,
+      "stations": [
+        { "code": "TN-ALANDUR", "name": "Alandur Metro Junction", "sector": "South Chennai", "latitude": 13.0040, "longitude": 80.2010, "base_pm25": 56.0, "base_pm10": 102.0 },
+        { "code": "TN-MANALI", "name": "Manali Petrochem Zone", "sector": "North Chennai", "latitude": 13.1670, "longitude": 80.2600, "base_pm25": 88.0, "base_pm10": 160.0 },
+        { "code": "TN-VELACHERY", "name": "Velachery Residential Hub", "sector": "South Chennai", "latitude": 12.9790, "longitude": 80.2180, "base_pm25": 48.0, "base_pm10": 90.0 }
+      ]
+    },
+    {
+      "name": "Pune",
+      "state": "Maharashtra",
+      "center": [18.5204, 73.8567],
+      "default_zoom": 11,
+      "stations": [
+        { "code": "MH-SHIVAJINAGAR", "name": "Shivajinagar Weather Station", "sector": "Central Pune", "latitude": 18.5308, "longitude": 73.8475, "base_pm25": 66.0, "base_pm10": 120.0 },
+        { "code": "MH-HINJEWADI", "name": "Hinjewadi IT Park Phase 1", "sector": "West Pune", "latitude": 18.5913, "longitude": 73.7389, "base_pm25": 52.0, "base_pm10": 96.0 },
+        { "code": "MH-HADAPSAR", "name": "Hadapsar Industrial Zone", "sector": "East Pune", "latitude": 18.5089, "longitude": 73.9260, "base_pm25": 84.0, "base_pm10": 155.0 }
+      ]
+    },
+    {
+      "name": "Lucknow",
+      "state": "Uttar Pradesh",
+      "center": [26.8467, 80.9462],
+      "default_zoom": 11,
+      "stations": [
+        { "code": "UP-LALBAGH", "name": "Lalbagh Municipal Zone", "sector": "Central Lucknow", "latitude": 26.8500, "longitude": 80.9300, "base_pm25": 145.0, "base_pm10": 260.0 },
+        { "code": "UP-GOMTI-NAGAR", "name": "Gomti Nagar Residential", "sector": "East Lucknow", "latitude": 26.8600, "longitude": 80.9900, "base_pm25": 120.0, "base_pm10": 215.0 },
+        { "code": "UP-TALKATORA", "name": "Talkatora District Industrial", "sector": "Industrial Area", "latitude": 26.8300, "longitude": 80.9000, "base_pm25": 170.0, "base_pm10": 305.0 }
+      ]
+    },
+    {
+      "name": "Jaipur",
+      "state": "Rajasthan",
+      "center": [26.9124, 75.7873],
+      "default_zoom": 11,
+      "stations": [
+        { "code": "RJ-ADARSH-NAGAR", "name": "Adarsh Nagar CAAQMS", "sector": "Central Jaipur", "latitude": 26.9000, "longitude": 75.8300, "base_pm25": 92.0, "base_pm10": 175.0 },
+        { "code": "RJ-SHASTRI-NAGAR", "name": "Shastri Nagar Science Park", "sector": "North Jaipur", "latitude": 26.9400, "longitude": 75.8000, "base_pm25": 84.0, "base_pm10": 160.0 },
+        { "code": "RJ-SITAPURA", "name": "Sitapura Industrial Area", "sector": "South Jaipur", "latitude": 26.7800, "longitude": 75.8300, "base_pm25": 115.0, "base_pm10": 220.0 }
+      ]
+    },
+    {
+      "name": "Patna",
+      "state": "Bihar",
+      "center": [25.5941, 85.1376],
+      "default_zoom": 11,
+      "stations": [
+        { "code": "BR-MURADPUR", "name": "Muradpur Patna University", "sector": "Central Patna", "latitude": 25.6200, "longitude": 85.1700, "base_pm25": 185.0, "base_pm10": 330.0 },
+        { "code": "BR-SAMANPURA", "name": "Samanpura Raja Bazar", "sector": "West Patna", "latitude": 25.6000, "longitude": 85.0800, "base_pm25": 170.0, "base_pm10": 305.0 },
+        { "code": "BR-DANAPUR", "name": "DRCC Danapur", "sector": "Danapur", "latitude": 25.6300, "longitude": 85.0400, "base_pm25": 160.0, "base_pm10": 285.0 }
+      ]
+    },
+    {
+      "name": "Ahmedabad",
+      "state": "Gujarat",
+      "center": [23.0225, 72.5714],
+      "default_zoom": 11,
+      "stations": [
+        { "code": "GJ-MANINAGAR", "name": "Maninagar CAAQMS", "sector": "South Ahmedabad", "latitude": 22.9900, "longitude": 72.6000, "base_pm25": 92.0, "base_pm10": 175.0 },
+        { "code": "GJ-CHANDKHEDA", "name": "Chandkheda GTU Campus", "sector": "North Ahmedabad", "latitude": 23.1100, "longitude": 72.5900, "base_pm25": 80.0, "base_pm10": 150.0 },
+        { "code": "GJ-PIRANA", "name": "Pirana Waste Processing Area", "sector": "East Ahmedabad", "latitude": 22.9700, "longitude": 72.5800, "base_pm25": 135.0, "base_pm10": 250.0 }
+      ]
+    },
+    {
+      "name": "Jalandhar",
+      "state": "Punjab",
+      "center": [31.3260, 75.5762],
+      "default_zoom": 12,
+      "stations": [
+        { "code": "PB-JAL-CIVIL", "name": "Civil Hospital Jalandhar", "sector": "Central", "latitude": 31.3200, "longitude": 75.5800, "base_pm25": 115.0, "base_pm10": 215.0 },
+        { "code": "PB-JAL-MODEL", "name": "Model Town CAAQMS", "sector": "Model Town", "latitude": 31.3050, "longitude": 75.5700, "base_pm25": 95.0, "base_pm10": 175.0 },
+        { "code": "PB-JAL-FOCAL", "name": "Focal Point Industrial Estate", "sector": "Industrial", "latitude": 31.3500, "longitude": 75.6100, "base_pm25": 140.0, "base_pm10": 255.0 }
+      ]
+    },
+    {
+      "name": "Ludhiana",
+      "state": "Punjab",
+      "center": [30.9010, 75.8573],
+      "default_zoom": 12,
+      "stations": [
+        { "code": "PB-LDH-PAU", "name": "Punjab Agricultural University", "sector": "PAU Campus", "latitude": 30.9000, "longitude": 75.8050, "base_pm25": 105.0, "base_pm10": 195.0 },
+        { "code": "PB-LDH-FOCAL", "name": "Focal Point Phase V", "sector": "Industrial Hub", "latitude": 30.8750, "longitude": 75.9200, "base_pm25": 165.0, "base_pm10": 300.0 },
+        { "code": "PB-LDH-CLOCK", "name": "Clock Tower GT Road", "sector": "Old City", "latitude": 30.9100, "longitude": 75.8500, "base_pm25": 130.0, "base_pm10": 240.0 }
+      ]
+    },
+    {
+      "name": "Amritsar",
+      "state": "Punjab",
+      "center": [31.6340, 74.8723],
+      "default_zoom": 12,
+      "stations": [
+        { "code": "PB-ASR-GOLDEN", "name": "Golden Temple Eco Zone", "sector": "Heritage Precinct", "latitude": 31.6200, "longitude": 74.8765, "base_pm25": 88.0, "base_pm10": 160.0 },
+        { "code": "PB-ASR-CIVIL", "name": "Civil Lines Court Road", "sector": "Civil Lines", "latitude": 31.6450, "longitude": 74.8700, "base_pm25": 110.0, "base_pm10": 205.0 },
+        { "code": "PB-ASR-CHHEHARTA", "name": "Chheharta Industrial Area", "sector": "West Amritsar", "latitude": 31.6250, "longitude": 74.7950, "base_pm25": 135.0, "base_pm10": 245.0 }
+      ]
+    }
+  ]
+}

@@ -14,7 +14,16 @@ export const StationMarker: React.FC<StationMarkerProps> = ({
   station,
   onSelectStation,
 }) => {
-  const info = getNAQIInfo(station.aqi);
+  const lat = Number(station?.latitude);
+  const lng = Number(station?.longitude);
+
+  // Validate coordinates to prevent Leaflet LatLng crashes
+  if (!station || isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) {
+    return null;
+  }
+
+  const aqiVal = typeof station.aqi === 'number' ? station.aqi : 100;
+  const info = getNAQIInfo(aqiVal);
 
   // Generate custom HTML DivIcon colored by NAQI band
   const customIcon = L.divIcon({
@@ -22,33 +31,33 @@ export const StationMarker: React.FC<StationMarkerProps> = ({
     html: `
       <div style="
         background-color: ${info.hex};
-        color: ${info.category === 'Satisfactory' || info.category === 'Moderate' || info.category === 'Poor' ? '#111827' : '#ffffff'};
-        border: 2px solid #ffffff;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.25);
+        color: ${info.category === 'Satisfactory' || info.category === 'Moderate' || info.category === 'Poor' ? '#0f172a' : '#ffffff'};
+        border: 2.5px solid #ffffff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
         border-radius: 9999px;
-        width: 38px;
-        height: 38px;
+        width: 36px;
+        height: 36px;
         display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
-        font-family: ui-monospace, monospace;
-        font-weight: 800;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-weight: 900;
         font-size: 11px;
         line-height: 1;
         cursor: pointer;
+        transition: transform 150ms ease;
       ">
-        <span>${Math.round(station.aqi)}</span>
+        ${Math.round(aqiVal)}
       </div>
     `,
-    iconSize: [38, 38],
-    iconAnchor: [19, 19],
-    popupAnchor: [0, -20],
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    popupAnchor: [0, -18],
   });
 
   return (
     <Marker
-      position={[station.latitude, station.longitude]}
+      position={[lat, lng]}
       icon={customIcon}
     >
       <Popup>

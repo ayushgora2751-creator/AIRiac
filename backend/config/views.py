@@ -101,3 +101,30 @@ class HealthCheckView(APIView):
             },
             'version': '1.0.0',
         }, status=http_status)
+
+
+class RootIndexView(APIView):
+    """
+    Public entry point for AIRiac Backend API on Render.
+    Provides API documentation links and service status.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        return Response({
+            'project': 'AIRiac - Urban Air Quality & Exposure Platform',
+            'status': 'online',
+            'message': 'Django REST Framework API is running.',
+            'version': '1.0.0',
+            'docs': {
+                'swagger': request.build_absolute_uri('/api/docs/'),
+                'redoc': request.build_absolute_uri('/api/redoc/'),
+                'schema': request.build_absolute_uri('/api/schema/'),
+            },
+            'health': request.build_absolute_uri('/api/v1/health/'),
+            'endpoints': {
+                'latest_air_quality': request.build_absolute_uri('/api/v1/air-quality/latest/'),
+                'geo_locate': request.build_absolute_uri('/api/v1/geo/locate/'),
+                'ai_assistant': request.build_absolute_uri('/api/v1/advice/chat/'),
+            }
+        }, status=status.HTTP_200_OK)

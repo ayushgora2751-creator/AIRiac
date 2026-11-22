@@ -61,7 +61,7 @@ describe('AIRiac Application Smoke Test', () => {
 
     // Verify Brand & City Indicator
     expect(screen.getByText('AIRiac')).toBeInTheDocument();
-    expect(screen.getByTestId('city-selector')).toHaveTextContent('Chandigarh, UT');
+    expect(screen.getByTestId('city-selector')).toHaveTextContent('Chandigarh');
 
     // Verify City Overview Hero
     expect(screen.getByText(/Chandigarh Air Quality/i)).toBeInTheDocument();

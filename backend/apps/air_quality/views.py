@@ -1,3 +1,4 @@
+import os
 from rest_framework import status, serializers
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -9,6 +10,7 @@ from apps.air_quality.serializers import (
     NAQICalculateResponseSerializer,
 )
 from providers.cpcb import MockCPCBProvider
+from providers.openaq import OpenAQProvider
 
 
 class LatestAirQualityView(APIView):
@@ -32,7 +34,10 @@ class LatestAirQualityView(APIView):
     def get(self, request):
         provider = MockCPCBProvider()
         station_filter = request.query_params.get('station_code')
-        data = provider.get_latest_summary(station_filter=station_filter)
+        city = request.query_params.get('city', 'Chandigarh')
+        data = provider.get_latest_summary(station_filter=station_filter, city=city)
+        if os.environ.get('OPENAQ_API_KEY'):
+            data['city_summary']['data_source'] = 'CPCB / OpenAQ Real-Time Sensors'
         return Response(data, status=status.HTTP_200_OK)
 
 

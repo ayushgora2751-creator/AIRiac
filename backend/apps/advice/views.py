@@ -6,6 +6,7 @@ from apps.advice.models import Advisory
 from apps.advice.serializers import AdvisorySerializer
 from apps.air_quality.naqi import get_category_and_color
 from providers.cpcb import MockCPCBProvider
+from apps.advice.gemini_service import GeminiAssistantService
 
 
 class CurrentAdvisoryView(APIView):
@@ -14,17 +15,19 @@ class CurrentAdvisoryView(APIView):
 
     def get(self, request):
         provider = MockCPCBProvider()
-        summary = provider.get_latest_summary()
+        city = request.query_params.get('city', 'Chandigarh')
+        summary = provider.get_latest_summary(city=city)
         avg_aqi = summary['city_summary']['average_aqi']
         category, color = get_category_and_color(avg_aqi)
 
         return Response({
+            'city': city,
             'current_aqi': avg_aqi,
             'category': category,
             'category_color': color,
-            'headline': f"Air Quality is {category} in Chandigarh",
+            'headline': f"Air Quality is {category} in {city}",
             'general_public_advice': 'Sensitive individuals should reduce prolonged outdoor exertion.',
-            'vulnerable_group_advice': 'Elderly and asthmatics should avoid morning outdoor runs at Sukhna Lake.',
+            'vulnerable_group_advice': 'Elderly and asthmatics should avoid morning outdoor runs.',
             'mask_guidance': 'N95 / FFP2 mask recommended for extended outdoor commuting.',
             'indoor_air_guidance': 'Keep windows closed during peak morning traffic (08:00-10:00).',
             'exercise_guidance': 'Shift vigorous cardiovascular exercise indoors.',
@@ -36,3 +39,35 @@ class AdvisoryCategoriesView(generics.ListAPIView):
     queryset = Advisory.objects.all()
     serializer_class = AdvisorySerializer
     permission_classes = [AllowAny]
+
+
+class GeminiChatAssistantView(APIView):
+    """
+    Chat endpoint for the AI Air Quality Assistant.
+    Powered by Google Gemini API with CPCB NAQI grounding and explainability.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        question = request.data.get('question', '').strip()
+        if not question:
+            return Response(
+                {"error": "Question is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        city = request.data.get('city', 'Chandigarh')
+        aqi = int(request.data.get('aqi', 150))
+        category = request.data.get('category', 'Moderate')
+        prominent = request.data.get('prominent_pollutant', 'PM2.5')
+
+        service = GeminiAssistantService()
+        result = service.ask(
+            question=question,
+            city=city,
+            aqi=aqi,
+            category=category,
+            prominent_pollutant=prominent,
+        )
+
+        return Response(result, status=status.HTTP_200_OK)

@@ -9,9 +9,12 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
     SpectacularRedocView,
 )
-from config.views import HealthCheckView
+from config.views import HealthCheckView, RootIndexView
 
 urlpatterns = [
+    # Public Root API Index for Render deployment
+    path('', RootIndexView.as_view(), name='root_index'),
+
     # Django Administration
     path('admin/', admin.site.urls),
 

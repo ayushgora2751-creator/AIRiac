@@ -24,13 +24,43 @@ SECRET_KEY = os.environ.get(
 
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = os.environ.get(
-    'ALLOWED_HOSTS',
-    'localhost,127.0.0.1,web,frontend,0.0.0.0'
-).split(',')
-ALLOWED_HOSTS = [h.strip() for h in ALLOWED_HOSTS if h.strip()]
+# Allowed Hosts configuration for local dev and Render cloud deployment
+ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS', '')
+env_hosts = [h.strip() for h in ALLOWED_HOSTS_ENV.split(',') if h.strip()]
+
+ALLOWED_HOSTS = [
+    'airiac-backend.onrender.com',
+    '.onrender.com',
+    'localhost',
+    '127.0.0.1',
+    '0.0.0.0',
+    'web',
+    'frontend',
+] + env_hosts
+
+# Deduplicate while preserving order
+ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS))
+
 if '*' not in ALLOWED_HOSTS and DEBUG:
     ALLOWED_HOSTS.append('*')
+
+# Reverse Proxy SSL Header for Render deployment
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# CSRF Trusted Origins for Render cloud and local frontend
+CSRF_TRUSTED_ORIGINS_ENV = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+env_csrf = [o.strip() for o in CSRF_TRUSTED_ORIGINS_ENV.split(',') if o.strip()]
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://airiac-backend.onrender.com',
+    'https://airiac-frontend.onrender.com',
+    'https://*.onrender.com',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:3000',
+] + env_csrf
+
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(CSRF_TRUSTED_ORIGINS))
 
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
@@ -269,9 +299,17 @@ else:
 CORS_ALLOW_ALL_ORIGINS = os.environ.get('CORS_ALLOW_ALL_ORIGINS', 'False').lower() in ('true', '1')
 CORS_ALLOWED_ORIGINS_RAW = os.environ.get(
     'CORS_ALLOWED_ORIGINS',
-    'http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000'
+    'https://airiac-frontend.onrender.com,http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000'
 )
 CORS_ALLOWED_ORIGINS = [orig.strip() for orig in CORS_ALLOWED_ORIGINS_RAW.split(',') if orig.strip()]
+if 'https://airiac-frontend.onrender.com' not in CORS_ALLOWED_ORIGINS:
+    CORS_ALLOWED_ORIGINS.append('https://airiac-frontend.onrender.com')
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https:\/\/.*\.onrender\.com$",
+    r"^http:\/\/localhost:[0-9]+$",
+    r"^http:\/\/127\.0\.0\.1:[0-9]+$",
+]
 
 # Celery Broker & Results Configuration
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0')
