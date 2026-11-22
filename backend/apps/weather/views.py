@@ -34,7 +34,8 @@ class HistoricalWeatherView(APIView):
         station_code = request.query_params.get('station_code', 'CH-SEC22-CAAQMS')
         try:
             days = int(request.query_params.get('days', 7))
-        except ValueError:
+            days = max(1, min(30, days))
+        except (ValueError, TypeError):
             days = 7
         provider = MockWeatherProvider()
         data = provider.fetch_historical(station_code=station_code, days=days)

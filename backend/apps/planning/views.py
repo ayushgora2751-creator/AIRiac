@@ -9,8 +9,17 @@ class CleanRouteView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        if not isinstance(request.data, dict):
+            return Response(
+                {"error": "Invalid request body: expected a JSON object"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         origin = request.data.get('origin', {'lat': 30.7410, 'lng': 76.7850})
+        if not isinstance(origin, dict):
+            origin = {'lat': 30.7410, 'lng': 76.7850}
         destination = request.data.get('destination', {'lat': 30.7259, 'lng': 76.7744})
+        if not isinstance(destination, dict):
+            destination = {'lat': 30.7259, 'lng': 76.7744}
 
         return Response({
             'origin': origin,

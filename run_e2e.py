@@ -2,7 +2,7 @@
 """
 AIRiac Standalone E2E Test Runner
 ==================================
-Standalone CLI test runner for executing and reporting the AIRiac 4-Tier
+Standalone CLI test runner for executing and reporting the AIRiac 5-Tier
 opaque-box end-to-end test suite.
 
 Precondition Guarantees:
@@ -12,11 +12,12 @@ Precondition Guarantees:
 - Strict zero-network egress guard intercepting outbound socket/HTTP calls.
 
 Usage:
-    python run_e2e.py                  # Run all 4 Tiers (133 tests)
+    python run_e2e.py                  # Run all 5 Tiers
     python run_e2e.py --tier 1         # Run Tier 1 only (Feature Coverage)
     python run_e2e.py --tier 2         # Run Tier 2 only (Boundary & Corner Cases)
     python run_e2e.py --tier 3         # Run Tier 3 only (Cross-Feature Combinations)
     python run_e2e.py --tier 4         # Run Tier 4 only (Real-World Scenarios)
+    python run_e2e.py --tier 5         # Run Tier 5 only (Adversarial & Hardening)
     python run_e2e.py -v               # Verbose test reporting
 
 Exit Codes:
@@ -84,6 +85,12 @@ TIER_SPECS = {
         "class": "TestTier4RealWorldScenarios",
         "description": "End-user persona journeys (Asthmatic, Smog Crisis, School PE)",
     },
+    "5": {
+        "num": "5",
+        "name": "Adversarial & Hardening",
+        "class": "TestTier5AdversarialCoverage",
+        "description": "Adversarial probes, non-dict payloads, type mutations, DoS bounds",
+    },
 }
 
 
@@ -113,7 +120,7 @@ class ResultCollector:
 def print_banner():
     width = 82
     print(f"\n{BOLD}{CYAN}{'=' * width}{RESET}")
-    print(f"{BOLD}{WHITE} AIRiac Platform — 4-Tier Opaque-Box E2E Test Runner{RESET}".center(width + 10))
+    print(f"{BOLD}{WHITE} AIRiac Platform — 5-Tier Opaque-Box E2E Test Runner{RESET}".center(width + 10))
     print(f"{DIM} Architecture: Zero-Network Isolation | Engine: SQLite | Auth: MD5 Hasher{RESET}".center(width + 10))
     print(f"{BOLD}{CYAN}{'=' * width}{RESET}\n")
 
@@ -125,14 +132,15 @@ def parse_arguments():
     )
     parser.add_argument(
         "--tier", "-t",
-        choices=["1", "2", "3", "4", "all"],
+        choices=["1", "2", "3", "4", "5", "all"],
         default="all",
         help="Target test tier to execute:\n"
              "  1   : Tier 1 Feature Coverage (>=40 tests)\n"
              "  2   : Tier 2 Boundary & Corner Cases (>=40 tests)\n"
              "  3   : Tier 3 Cross-Feature Multi-Step Workflows (4 pipelines)\n"
              "  4   : Tier 4 Realistic Persona Journeys (5 scenarios)\n"
-             "  all : Execute all 4 tiers sequentially (default)\n",
+             "  5   : Tier 5 Adversarial & Hardening (probes & DoS bounds)\n"
+             "  all : Execute all 5 tiers sequentially (default)\n",
     )
     parser.add_argument(
         "--verbose", "-v",
@@ -259,7 +267,7 @@ def main():
     args = parse_arguments()
 
     if args.tier == "all":
-        tiers_to_run = ["1", "2", "3", "4"]
+        tiers_to_run = ["1", "2", "3", "4", "5"]
     else:
         tiers_to_run = [args.tier]
 

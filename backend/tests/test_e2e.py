@@ -895,14 +895,10 @@ class TestTier2BoundaryAndCornerCases:
     def test_advice_chat_non_numeric_aqi(self, api_client):
         """
         Non-numeric AQI boundary.
-        Asserts status is in (200, 400, 500) gracefully accommodating M2 patch status.
+        Asserts status is in (200, 400) without HTTP 500 server crash or uncaught exception.
         """
-        try:
-            res = api_client.post("/api/v1/advice/chat/", {"question": "Is it safe?", "aqi": "severe"}, format="json")
-            assert res.status_code in (status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        except ValueError:
-            # Unhandled ValueError in unpatched M2 view
-            pass
+        res = api_client.post("/api/v1/advice/chat/", {"question": "Is it safe?", "aqi": "severe"}, format="json")
+        assert res.status_code in (status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST)
 
     def test_advice_chat_extremely_long_question(self, api_client):
         res = api_client.post("/api/v1/advice/chat/", {"question": "A" * 5000, "aqi": 150}, format="json")
@@ -920,13 +916,10 @@ class TestTier2BoundaryAndCornerCases:
     def test_alerts_test_send_non_numeric_aqi(self, api_client):
         """
         Non-numeric AQI in alert test-send.
-        Asserts status in (200, 400, 500) gracefully accommodating M2 patch status.
+        Asserts status in (200, 400) without HTTP 500 server crash or uncaught exception.
         """
-        try:
-            res = api_client.post("/api/v1/alerts/test-send/", {"email": "user@test.com", "aqi": "high"}, format="json")
-            assert res.status_code in (status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        except ValueError:
-            pass
+        res = api_client.post("/api/v1/alerts/test-send/", {"email": "user@test.com", "aqi": "high"}, format="json")
+        assert res.status_code in (status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST)
 
     def test_alerts_test_send_missing_fields(self, api_client):
         res = api_client.post("/api/v1/alerts/test-send/", {}, format="json")
@@ -1506,3 +1499,137 @@ class TestTier4RealWorldScenarios:
         matching_adv = next((a for a in adv_res.data if a["aqi_category"] == category), None)
         assert matching_adv is not None
         assert "exercise_guidance" in matching_adv
+
+
+# ---------------------------------------------------------------------------
+# Tier 5: Adversarial & Injection Hardening Coverage
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db
+class TestTier5AdversarialCoverage:
+    """
+    Tier 5: Adversarial & Injection Hardening Coverage.
+    Validates that DRF endpoints withstand non-dict bodies, malformed type mutations,
+    boundary overflows, and DoS parameters without raising unhandled HTTP 500 server crashes.
+    """
+
+    def test_adversarial_advice_chat_non_dict_payload(self, api_client):
+        """Array payload to advice chat returns HTTP 400 Bad Request, never 500."""
+        res = api_client.post("/api/v1/advice/chat/", data=[], format="json")
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+        assert "error" in res.data
+
+    def test_adversarial_advice_chat_null_question(self, api_client):
+        """Null question returns HTTP 400 Bad Request, never 500."""
+        res = api_client.post("/api/v1/advice/chat/", data={"question": None}, format="json")
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+        assert "error" in res.data
+
+    def test_adversarial_advice_chat_integer_question(self, api_client):
+        """Integer question returns HTTP 400 Bad Request, never 500."""
+        res = api_client.post("/api/v1/advice/chat/", data={"question": 12345}, format="json")
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+        assert "error" in res.data
+
+    def test_adversarial_advice_chat_list_question(self, api_client):
+        """List question returns HTTP 400 Bad Request, never 500."""
+        res = api_client.post("/api/v1/advice/chat/", data={"question": ["item"]}, format="json")
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+        assert "error" in res.data
+
+    def test_adversarial_advice_chat_dict_question(self, api_client):
+        """Dict question returns HTTP 400 Bad Request, never 500."""
+        res = api_client.post("/api/v1/advice/chat/", data={"question": {"nested": "dict"}}, format="json")
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+        assert "error" in res.data
+
+    def test_adversarial_advice_chat_boolean_question(self, api_client):
+        """Boolean question returns HTTP 400 Bad Request, never 500."""
+        res = api_client.post("/api/v1/advice/chat/", data={"question": True}, format="json")
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+        assert "error" in res.data
+
+    def test_adversarial_advice_chat_non_string_metadata(self, api_client):
+        """Non-string city, category, prominent_pollutant safely sanitized to defaults."""
+        res = api_client.post("/api/v1/advice/chat/", data={
+            "question": "Is it safe to cycle outside?",
+            "city": 9876,
+            "category": ["Severe"],
+            "prominent_pollutant": {"pollutant": "PM2.5"},
+            "aqi": "corrupt_aqi"
+        }, format="json")
+        assert res.status_code == status.HTTP_200_OK
+        assert res.data["city"] == "Chandigarh"
+        assert res.data["aqi"] == 150
+
+    def test_adversarial_alerts_test_send_non_dict_payload(self, api_client):
+        """Array payload to alerts test-send returns HTTP 400 Bad Request, never 500."""
+        res = api_client.post("/api/v1/alerts/test-send/", data=[], format="json")
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+        assert "error" in res.data
+
+    def test_adversarial_alerts_test_send_malformed_field_types(self, api_client):
+        """Non-string fields in test-send gracefully sanitize without crashing."""
+        res = api_client.post("/api/v1/alerts/test-send/", data={
+            "email": 12345,
+            "name": ["Citizen"],
+            "city": {"c": "Chd"},
+            "aqi": "invalid_aqi"
+        }, format="json")
+        assert res.status_code == status.HTTP_200_OK
+        assert res.data["status"] in ["SENT", "QUEUED_AND_DISPATCHED"]
+
+    def test_adversarial_alerts_shipday_non_dict_payload(self, api_client):
+        """Array payload to shipday dispatch returns HTTP 400 Bad Request, never 500."""
+        res = api_client.post("/api/v1/alerts/dispatch-delivery/", data=[], format="json")
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+        assert "error" in res.data
+
+    def test_adversarial_alerts_shipday_malformed_field_types(self, api_client):
+        """Non-string fields in shipday dispatch safely fall back without crashing."""
+        res = api_client.post("/api/v1/alerts/dispatch-delivery/", data={
+            "order_number": 99999,
+            "customer_name": None,
+            "address": ["Sector 17"],
+            "phone": 1234567890,
+            "item": {"item": "mask"}
+        }, format="json")
+        assert res.status_code == status.HTTP_200_OK
+        assert "order_id" in res.data
+
+    def test_adversarial_clean_route_non_dict_payload(self, api_client):
+        """Array payload to clean-route returns HTTP 400 Bad Request, never 500."""
+        res = api_client.post("/api/v1/planning/clean-route/", data=[], format="json")
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+        assert "error" in res.data
+
+    def test_adversarial_clean_route_malformed_origin_destination_types(self, api_client):
+        """Non-dict origin and destination fall back to defaults without crashing."""
+        res = api_client.post("/api/v1/planning/clean-route/", data={
+            "origin": "invalid_origin_string",
+            "destination": 12345
+        }, format="json")
+        assert res.status_code == status.HTTP_200_OK
+        assert "routes" in res.data
+        assert len(res.data["routes"]) == 2
+
+    def test_adversarial_weather_historical_extreme_dos_days_clamped(self, api_client):
+        """Extreme days parameter (100000) is clamped to 30 days, avoiding memory/CPU DoS."""
+        res = api_client.get("/api/v1/weather/history/?days=100000")
+        assert res.status_code == status.HTTP_200_OK
+        assert isinstance(res.data, list)
+        assert len(res.data) == 30 * 24
+
+    def test_adversarial_weather_historical_negative_days_clamped(self, api_client):
+        """Negative days parameter (-10) is clamped to minimum 1 day."""
+        res = api_client.get("/api/v1/weather/history/?days=-10")
+        assert res.status_code == status.HTTP_200_OK
+        assert isinstance(res.data, list)
+        assert len(res.data) == 1 * 24
+
+    def test_adversarial_weather_historical_non_numeric_days_clamped(self, api_client):
+        """Non-numeric days parameter defaults safely to 7 days."""
+        res = api_client.get("/api/v1/weather/history/?days=corrupt_days")
+        assert res.status_code == status.HTTP_200_OK
+        assert isinstance(res.data, list)
+        assert len(res.data) == 7 * 24
