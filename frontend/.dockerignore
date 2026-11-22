@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build artifacts and caches
+dist/
+dist-ssr/
+.vite/
+.cache/
+coverage/
+*.tsbuildinfo
+
+# Git and repo metadata
+.git/
+.gitignore
+
+# Environment files and secrets
+.env*
+*.env
+
+# Package manager logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
