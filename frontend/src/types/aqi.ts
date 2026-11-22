@@ -23,6 +23,8 @@ export type PollutantMap = Record<PollutantKey, PollutantDetail>;
 
 export interface StationData {
   station_id: string;
+  station_code?: string;
+  code?: string;
   name: string;
   latitude: number;
   longitude: number;
@@ -46,6 +48,7 @@ export interface CityAQISummary {
 
 export interface DiurnalTrendPoint {
   time: string;
+  timestamp?: string;
   aqi: number;
   pm25: number;
   pm10: number;

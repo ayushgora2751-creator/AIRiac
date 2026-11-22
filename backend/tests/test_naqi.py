@@ -9,7 +9,6 @@ from apps.air_quality.naqi import (
     calculate_naqi,
     calculate_sub_index,
     get_category_and_color,
-    NAQICalculator,
 )
 
 

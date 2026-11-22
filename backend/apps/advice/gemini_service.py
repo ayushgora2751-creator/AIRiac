@@ -28,13 +28,27 @@ class GeminiAssistantService:
     ]
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.environ.get('GEMINI_API_KEY')
+        if api_key is not None:
+            raw_key = api_key
+        else:
+            raw_key = os.environ.get('GEMINI_API_KEY')
+        self.api_key = raw_key.strip() if (raw_key and raw_key.strip()) else None
 
-    def ask(self, question: str, city: str = 'Chandigarh', aqi: int = 150, category: str = 'Moderate', prominent_pollutant: str = 'PM2.5') -> Dict[str, Any]:
+    def ask(
+        self,
+        question: str,
+        city: str = 'Chandigarh',
+        aqi: int = 150,
+        category: str = 'Moderate',
+        prominent_pollutant: str = 'PM2.5',
+    ) -> Dict[str, Any]:
         """
         Sends user question and environmental context to Gemini API.
         Returns conversational response with explainability metadata.
         """
+        if not self.api_key:
+            return self._generate_rule_fallback(question, city, aqi, category)
+
         # Formulate system prompt adhering strictly to CPCB and WHO exposure standards
         system_context = (
             f"You are AIRiac, a compassionate and knowledgeable environmental health AI assistant for Indian cities.\n"

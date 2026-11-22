@@ -12,7 +12,11 @@ import { SmartDailyPlanner } from './components/planner/SmartDailyPlanner';
 import { ExposureHistoryTracker } from './components/exposure/ExposureHistoryTracker';
 import { CommunityReportsFeed } from './components/community/CommunityReportsFeed';
 import { FloatingAssistantWidget } from './components/assistant/FloatingAssistantWidget';
-import { SplineAtmosphereScene } from './components/3d/SplineAtmosphereScene';
+const SplineAtmosphereScene = React.lazy(() =>
+  import('./components/3d/SplineAtmosphereScene').then((module) => ({
+    default: module.SplineAtmosphereScene,
+  }))
+);
 import { AirAssistantModal } from './components/assistant/AirAssistantModal';
 import { HomeAirTwinModal } from './components/home/HomeAirTwinModal';
 import { SmartAlertsModal } from './components/alerts/SmartAlertsModal';
@@ -63,11 +67,11 @@ export const App: React.FC = () => {
       const exists = stations.some(
         (s) =>
           s.station_id === selectedStationId ||
-          (s as any).station_code === selectedStationId
+          s.station_code === selectedStationId
       );
       if (!exists) {
         setSelectedStationId(
-          stations[0].station_id || (stations[0] as any).station_code
+          stations[0].station_id || stations[0].station_code || ''
         );
       }
     }
@@ -78,7 +82,7 @@ export const App: React.FC = () => {
     stations.find(
       (s) =>
         s.station_id === selectedStationId ||
-        (s as any).station_code === selectedStationId
+        s.station_code === selectedStationId
     ) || fallbackStation;
 
   const trendSeries = trendData?.series?.length
@@ -116,10 +120,19 @@ export const App: React.FC = () => {
       {is3DActive && (
         <section className="relative z-20 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-4 animate-fade-in">
           <ErrorBoundary fallbackTitle="3D Scene failed to load">
-            <SplineAtmosphereScene
-              onClose={() => setIs3DActive(false)}
-              selectedCity={selectedCity}
-            />
+            <React.Suspense
+              fallback={
+                <div className="w-full h-[500px] sm:h-[620px] rounded-3xl bg-slate-950/80 backdrop-blur-xl border border-white/20 flex flex-col items-center justify-center text-white">
+                  <div className="w-12 h-12 rounded-full border-4 border-emerald-500/20 border-t-emerald-400 animate-spin mb-4" />
+                  <p className="text-sm font-semibold text-emerald-300">Loading 3D Atmospheric Simulation...</p>
+                </div>
+              }
+            >
+              <SplineAtmosphereScene
+                onClose={() => setIs3DActive(false)}
+                selectedCity={selectedCity}
+              />
+            </React.Suspense>
           </ErrorBoundary>
         </section>
       )}

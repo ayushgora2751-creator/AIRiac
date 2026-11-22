@@ -55,25 +55,28 @@ class IPLocateView(APIView):
                 'is_local': True,
             }, status=status.HTTP_200_OK)
 
-        try:
-            url = f"http://api.ipstack.com/{client_ip}?access_key={api_key}"
-            req = urllib.request.Request(url, headers={'User-Agent': 'AIRiac-GeoLocator/1.0'})
-            with urllib.request.urlopen(req, timeout=5) as response:
-                if response.status == 200:
-                    data = json.loads(response.read().decode('utf-8'))
-                    if data.get('city'):
-                        return Response({
-                            'ip': client_ip,
-                            'city': data.get('city'),
-                            'region_name': data.get('region_name', ''),
-                            'latitude': float(data.get('latitude', 30.7333)),
-                            'longitude': float(data.get('longitude', 76.7794)),
-                            'country_name': data.get('country_name', 'India'),
-                            'provider': 'ipstack',
-                            'is_local': False,
-                        }, status=status.HTTP_200_OK)
-        except Exception as exc:
-            logger.warning("IPStack lookup error (%s); returning default location", exc)
+        if api_key and api_key.strip():
+            try:
+                url = f"http://api.ipstack.com/{client_ip}?access_key={api_key.strip()}"
+                req = urllib.request.Request(url, headers={'User-Agent': 'AIRiac-GeoLocator/1.0'})
+                with urllib.request.urlopen(req, timeout=5) as response:
+                    if response.status == 200:
+                        data = json.loads(response.read().decode('utf-8'))
+                        if data.get('city'):
+                            return Response({
+                                'ip': client_ip,
+                                'city': data.get('city'),
+                                'region_name': data.get('region_name', ''),
+                                'latitude': float(data.get('latitude', 30.7333)),
+                                'longitude': float(data.get('longitude', 76.7794)),
+                                'country_name': data.get('country_name', 'India'),
+                                'provider': 'ipstack',
+                                'is_local': False,
+                            }, status=status.HTTP_200_OK)
+            except Exception as exc:
+                logger.warning("IPStack lookup error (%s); returning default location", exc)
+        else:
+            logger.info("IPSTACK_API_KEY not configured; using local geo simulation fallback.")
 
         return Response({
             'ip': client_ip,

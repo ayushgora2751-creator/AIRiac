@@ -4,7 +4,6 @@ Verifies MockCPCBProvider, MockWeatherProvider, MockFIRMSProvider determinism,
 time-seeded diurnal variations, and asserts zero external socket/network connections.
 """
 import socket
-import pytest
 from providers.cpcb import MockCPCBProvider
 from providers.weather import MockWeatherProvider
 from providers.fires import MockFIRMSProvider
@@ -103,3 +102,73 @@ def test_zero_network_calls_guarantee(monkeypatch):
     firms = MockFIRMSProvider()
     firms.fetch_current()
     firms.fetch_historical(days=3)
+
+
+def test_can_resolve_host_socket_probe():
+    """Verify _can_resolve_host returns False for unreachable hosts/ports without hanging."""
+    from config.settings import _can_resolve_host
+    assert _can_resolve_host('') is False
+    assert _can_resolve_host(None) is False
+    # Unreachable non-routable / unassigned port on localhost
+    assert _can_resolve_host('127.0.0.1', port=59999) is False
+    assert _can_resolve_host('nonexistent.domain.invalid', port=5432) is False
+
+
+def test_gemini_service_early_guard_without_api_key(monkeypatch):
+    """Verify GeminiAssistantService returns rule fallback instantly when API key is missing."""
+    from apps.advice.gemini_service import GeminiAssistantService
+    monkeypatch.delenv('GEMINI_API_KEY', raising=False)
+    service = GeminiAssistantService()
+    assert service.api_key is None
+    res = service.ask("Is it safe outside?", city="Chandigarh", aqi=160, category="Moderate")
+    assert res["is_llm"] is False
+    assert res["model"] == "cpcb-rule-engine-fallback"
+    assert "160" in res["reply"]
+
+    service_empty = GeminiAssistantService(api_key="")
+    assert service_empty.api_key is None
+
+
+def test_advice_chat_view_malformed_aqi_fallback(monkeypatch):
+    """Verify GeminiChatAssistantView handles non-numeric/None aqi gracefully without 500 error."""
+    monkeypatch.delenv('GEMINI_API_KEY', raising=False)
+    from rest_framework.test import APIRequestFactory
+    from apps.advice.views import GeminiChatAssistantView
+    factory = APIRequestFactory()
+    view = GeminiChatAssistantView.as_view()
+
+    # Pass non-numeric string for aqi
+    req = factory.post(
+        '/api/v1/advice/chat/',
+        {'question': 'Is it safe?', 'aqi': 'invalid_string'},
+        format='json'
+    )
+    response = view(req)
+    assert response.status_code == 200
+    assert response.data['aqi'] == 150
+
+    # Pass None for aqi
+    req2 = factory.post(
+        '/api/v1/advice/chat/',
+        {'question': 'Is it safe?', 'aqi': None},
+        format='json'
+    )
+    response2 = view(req2)
+    assert response2.status_code == 200
+    assert response2.data['aqi'] == 150
+
+
+def test_alerts_test_view_malformed_aqi_fallback(monkeypatch):
+    """Verify MailercloudTestAlertView handles non-numeric aqi gracefully without 500 error."""
+    monkeypatch.delenv('MAILERCLOUD_API_KEY', raising=False)
+    from rest_framework.test import APIRequestFactory
+    from apps.alerts.views import MailercloudTestAlertView
+    factory = APIRequestFactory()
+    view = MailercloudTestAlertView.as_view()
+
+    req = factory.post('/api/v1/alerts/test/', {'aqi': 'corrupt_value'}, format='json')
+    response = view(req)
+    assert response.status_code == 200
+    assert response.data['aqi'] == 184
+
+

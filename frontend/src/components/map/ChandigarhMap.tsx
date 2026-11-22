@@ -78,15 +78,23 @@ export const ChandigarhMap: React.FC<ChandigarhMapProps> = ({
   }
 
   const cycleTileSource = () => {
-    if (tileSource === 'osm') setTileSource('voyager');
-    else if (tileSource === 'voyager') setTileSource('maptiler');
-    else setTileSource('osm');
+    if (tileSource === 'osm') {
+      setTileSource('voyager');
+    } else if (tileSource === 'voyager') {
+      if (MAPTILER_KEY) {
+        setTileSource('maptiler');
+      } else {
+        setTileSource('osm');
+      }
+    } else {
+      setTileSource('osm');
+    }
   };
 
   const getTileLabel = () => {
-    if (tileSource === 'osm') return 'OpenStreetMap';
     if (tileSource === 'voyager') return 'CartoDB Clean';
-    return 'MapTiler Cloud';
+    if (tileSource === 'maptiler' && MAPTILER_KEY) return 'MapTiler Cloud';
+    return 'OpenStreetMap';
   };
 
   return (

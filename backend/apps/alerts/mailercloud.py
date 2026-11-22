@@ -9,7 +9,7 @@ import uuid
 import logging
 import urllib.request
 import urllib.error
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +22,34 @@ class MailercloudService:
     API_URL = "https://email-api.mailercloud.com/email"
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.environ.get('MAILERCLOUD_API_KEY', 'Mailercloud_API_Key_AIRiac')
-        self.sender_email = os.environ.get('MAILERCLOUD_SENDER_EMAIL', 'alerts@airiac.org')
+        raw_key = api_key or os.environ.get('MAILERCLOUD_API_KEY')
+        self.api_key = raw_key.strip() if (raw_key and raw_key.strip()) else None
+        self.sender_email = os.environ.get(
+            'MAILERCLOUD_SENDER_EMAIL', 'alerts@airiac.org'
+        )
+
+    def send_alert(
+        self,
+        recipient_email: str,
+        recipient_name: str,
+        city: str,
+        current_aqi: int,
+        category: str,
+        recommendations: str = (
+            'Keep windows shut and wear an N95 respirator if commuting.'
+        ),
+    ) -> Dict[str, Any]:
+        """
+        Convenience alias for send_pollution_alert.
+        """
+        return self.send_pollution_alert(
+            recipient_email=recipient_email,
+            recipient_name=recipient_name,
+            city=city,
+            current_aqi=current_aqi,
+            category=category,
+            recommendations=recommendations,
+        )
 
     def send_pollution_alert(
         self,
@@ -32,7 +58,9 @@ class MailercloudService:
         city: str,
         current_aqi: int,
         category: str,
-        recommendations: str = 'Keep windows shut and wear an N95 respirator if commuting.',
+        recommendations: str = (
+            'Keep windows shut and wear an N95 respirator if commuting.'
+        ),
     ) -> Dict[str, Any]:
         """
         Send a pollution alert email to a subscriber.
@@ -110,7 +138,7 @@ class MailercloudService:
         }
 
         # If a live key is configured, post to Mailercloud
-        if self.api_key and not self.api_key.startswith("Mailercloud_API_Key_Placeholder"):
+        if self.api_key:
             try:
                 req = urllib.request.Request(
                     self.API_URL,
@@ -131,7 +159,13 @@ class MailercloudService:
                         "recipient": recipient_email,
                     }
             except Exception as exc:
-                logger.warning("Mailercloud API dispatch error (%s); queued locally", exc)
+                logger.warning(
+                    "Mailercloud API dispatch error (%s); queued locally", exc
+                )
+        else:
+            logger.info(
+                "MAILERCLOUD_API_KEY not configured; using local queued alert simulation."
+            )
 
         # Resilient queue/simulation response for developer environment
         return {

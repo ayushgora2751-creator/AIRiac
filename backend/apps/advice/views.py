@@ -57,7 +57,11 @@ class GeminiChatAssistantView(APIView):
             )
 
         city = request.data.get('city', 'Chandigarh')
-        aqi = int(request.data.get('aqi', 150))
+        try:
+            raw_aqi = request.data.get('aqi', 150)
+            aqi = int(raw_aqi) if raw_aqi is not None else 150
+        except (ValueError, TypeError):
+            aqi = 150
         category = request.data.get('category', 'Moderate')
         prominent = request.data.get('prominent_pollutant', 'PM2.5')
 

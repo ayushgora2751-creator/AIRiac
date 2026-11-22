@@ -10,7 +10,6 @@ from apps.air_quality.serializers import (
     NAQICalculateResponseSerializer,
 )
 from providers.cpcb import MockCPCBProvider
-from providers.openaq import OpenAQProvider
 
 
 class LatestAirQualityView(APIView):

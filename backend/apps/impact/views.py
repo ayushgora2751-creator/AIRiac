@@ -3,8 +3,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from apps.air_quality.naqi import get_category_and_color
-from apps.impact.models import VulnerableGroup, HealthImpactMatrix
-from apps.impact.serializers import VulnerableGroupSerializer, HealthImpactMatrixSerializer
+from apps.impact.models import VulnerableGroup
+from apps.impact.serializers import VulnerableGroupSerializer
 
 
 class VulnerableGroupListView(generics.ListAPIView):

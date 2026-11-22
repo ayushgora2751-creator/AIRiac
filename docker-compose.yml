@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-airiac_db}
       POSTGRES_USER: ${POSTGRES_USER:-airiac}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-airiac_secure_password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "${DB_PORT:-5432}:5432"
     volumes:
@@ -51,12 +51,12 @@ services:
       - "${WEB_PORT:-8000}:8000"
     env_file: .env
     environment:
-      - SECRET_KEY=${SECRET_KEY:-django-insecure-phase0-airiac-chandigarh-development-key-xyz123}
+      - SECRET_KEY=${SECRET_KEY}
       - DEBUG=${DEBUG:-True}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,web,frontend,0.0.0.0}
       - DB_NAME=${DB_NAME:-airiac_db}
       - DB_USER=${DB_USER:-airiac}
-      - DB_PASSWORD=${DB_PASSWORD:-airiac_secure_password}
+      - DB_PASSWORD=${DB_PASSWORD}
       - DB_HOST=db
       - DB_PORT=5432
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
@@ -104,11 +104,11 @@ services:
       - ./backend:/app
     env_file: .env
     environment:
-      - SECRET_KEY=${SECRET_KEY:-django-insecure-phase0-airiac-chandigarh-development-key-xyz123}
+      - SECRET_KEY=${SECRET_KEY}
       - DEBUG=${DEBUG:-False}
       - DB_NAME=${DB_NAME:-airiac_db}
       - DB_USER=${DB_USER:-airiac}
-      - DB_PASSWORD=${DB_PASSWORD:-airiac_secure_password}
+      - DB_PASSWORD=${DB_PASSWORD}
       - DB_HOST=db
       - DB_PORT=5432
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
@@ -148,11 +148,11 @@ services:
       - ./backend:/app
     env_file: .env
     environment:
-      - SECRET_KEY=${SECRET_KEY:-django-insecure-phase0-airiac-chandigarh-development-key-xyz123}
+      - SECRET_KEY=${SECRET_KEY}
       - DEBUG=${DEBUG:-False}
       - DB_NAME=${DB_NAME:-airiac_db}
       - DB_USER=${DB_USER:-airiac}
-      - DB_PASSWORD=${DB_PASSWORD:-airiac_secure_password}
+      - DB_PASSWORD=${DB_PASSWORD}
       - DB_HOST=db
       - DB_PORT=5432
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}

@@ -2,7 +2,7 @@
 Geospatial utility functions for Chandigarh bounding box checks and distance computations.
 """
 import math
-from typing import Optional, Tuple
+from typing import Tuple
 from apps.geo.constants import CHANDIGARH_BBOX, STATION_COORDINATES
 
 

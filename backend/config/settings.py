@@ -16,13 +16,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR.parent / '.env')
 load_dotenv(BASE_DIR / '.env')
 
-# Quick-start development settings - unsuitable for production
-SECRET_KEY = os.environ.get(
-    'SECRET_KEY',
-    'django-insecure-phase0-airiac-chandigarh-development-key-xyz123'
-)
-
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
+
+# Quick-start development settings - unsuitable for production
+# Cryptographic signing key loaded strictly from environment with dev-only fallback
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-development-local-key'
+    else:
+        raise ValueError("The SECRET_KEY environment variable must be set in production mode.")
 
 # Allowed Hosts configuration for local dev and Render cloud deployment
 ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS', '')
@@ -156,18 +159,22 @@ DB_PORT = os.environ.get('DB_PORT', '5432')
 is_testing = 'test' in sys.argv or 'pytest' in sys.modules
 
 
-def _can_resolve_host(host):
+def _can_resolve_host(host, port=5432):
     if not host:
         return False
     try:
-        socket.gethostbyname(host)
-        return True
+        port_int = int(port) if port else 5432
+    except (ValueError, TypeError):
+        port_int = 5432
+    try:
+        with socket.create_connection((host, port_int), timeout=0.5):
+            return True
     except (socket.error, OSError):
         return False
 
 
-# If running in Docker (or DB_HOST is resolvable) and not running unit tests:
-if DB_HOST and _can_resolve_host(DB_HOST) and not is_testing:
+# If running in Docker (or DB_HOST is reachable) and not running unit tests:
+if DB_HOST and _can_resolve_host(DB_HOST, DB_PORT) and not is_testing:
     engine = DB_ENGINE
     if not engine:
         engine = 'django.contrib.gis.db.backends.postgis' if HAS_GDAL else 'django.db.backends.postgresql'
@@ -176,7 +183,7 @@ if DB_HOST and _can_resolve_host(DB_HOST) and not is_testing:
             'ENGINE': engine,
             'NAME': DB_NAME or 'airiac_db',
             'USER': DB_USER or 'airiac',
-            'PASSWORD': DB_PASSWORD or 'airiac_secure_password',
+            'PASSWORD': DB_PASSWORD or '',
             'HOST': DB_HOST,
             'PORT': DB_PORT,
         }

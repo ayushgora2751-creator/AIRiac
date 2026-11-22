@@ -28,7 +28,7 @@ export const SmartDailyPlanner: React.FC<SmartDailyPlannerProps> = ({
   // Map 24h trend points to activity feasibility ratings
   const safeTrend = Array.isArray(trendSeries) && trendSeries.length > 0 ? trendSeries : [];
   const hourSlots = safeTrend.slice(0, 12).map((pt, idx) => {
-    const rawTime = (pt as any)?.time ?? (pt as any)?.timestamp ?? `${idx * 2}:00`;
+    const rawTime = pt?.time ?? pt?.timestamp ?? `${idx * 2}:00`;
     const timeStr = typeof rawTime === 'string' && rawTime.includes(':') ? rawTime : `${idx * 2}:00`;
     const hourNum = parseInt(timeStr.split(':')[0], 10) || idx * 2;
     const aqi = typeof pt.aqi === 'number' ? pt.aqi : citySummary.overall_aqi;

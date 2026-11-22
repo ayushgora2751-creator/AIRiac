@@ -71,6 +71,13 @@ export const SplineAtmosphereScene: React.FC<SplineAtmosphereSceneProps> = ({
   const [webGLSupported, setWebGLSupported] = useState(true);
   const [activePin, setActivePin] = useState<string | null>(selectedCity);
 
+  // Sync selectedCity prop changes to update active 3D pin
+  useEffect(() => {
+    if (selectedCity) {
+      setActivePin(selectedCity);
+    }
+  }, [selectedCity]);
+
   const handleResetCamera = useCallback(() => {
     if (controlsRef.current) {
       controlsRef.current.reset();
@@ -117,6 +124,27 @@ export const SplineAtmosphereScene: React.FC<SplineAtmosphereSceneProps> = ({
     renderer.toneMappingExposure = 1.2;
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
+
+    const canvas = renderer.domElement;
+    let isDisposed = false;
+
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+      isDisposed = true;
+      if (animFrameIdRef.current) {
+        cancelAnimationFrame(animFrameIdRef.current);
+      }
+      setHasError(true);
+      setErrorMessage('WebGL context was lost. Click retry to reinitialize 3D Earth.');
+    };
+
+    const handleContextRestored = () => {
+      setHasError(false);
+      setIsLoading(true);
+    };
+
+    canvas.addEventListener('webglcontextlost', handleContextLost, false);
+    canvas.addEventListener('webglcontextrestored', handleContextRestored, false);
 
     // 4. Orbit Controls
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -255,7 +283,6 @@ export const SplineAtmosphereScene: React.FC<SplineAtmosphereSceneProps> = ({
     );
 
     // 10. Animation Loop
-    let isDisposed = false;
     const animate = () => {
       if (isDisposed) return;
       animFrameIdRef.current = requestAnimationFrame(animate);
@@ -285,10 +312,36 @@ export const SplineAtmosphereScene: React.FC<SplineAtmosphereSceneProps> = ({
     return () => {
       isDisposed = true;
       window.removeEventListener('resize', handleResize);
+      canvas.removeEventListener('webglcontextlost', handleContextLost);
+      canvas.removeEventListener('webglcontextrestored', handleContextRestored);
       if (animFrameIdRef.current) {
         cancelAnimationFrame(animFrameIdRef.current);
       }
       controls.dispose();
+
+      // Recursive disposal of GLTF scene mesh, geometry, material, and textures
+      if (earthGroupRef.current) {
+        earthGroupRef.current.traverse((obj) => {
+          const mesh = obj as THREE.Mesh;
+          if (mesh.geometry) {
+            mesh.geometry.dispose();
+          }
+          if (mesh.material) {
+            const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+            materials.forEach((mat) => {
+              Object.keys(mat).forEach((key) => {
+                const prop = (mat as unknown as Record<string, unknown>)[key];
+                if (prop && typeof prop === 'object' && 'isTexture' in prop && Boolean(prop.isTexture)) {
+                  (prop as THREE.Texture).dispose();
+                }
+              });
+              mat.dispose();
+            });
+          }
+        });
+        earthGroupRef.current.clear();
+      }
+
       renderer.dispose();
       starGeometry.dispose();
       starMaterial.dispose();

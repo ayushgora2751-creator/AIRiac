@@ -36,7 +36,11 @@ class MailercloudTestAlertView(APIView):
         recipient_email = request.data.get('email', 'subscriber@example.com')
         recipient_name = request.data.get('name', 'Community Citizen')
         city = request.data.get('city', 'Chandigarh')
-        aqi = int(request.data.get('aqi', 184))
+        try:
+            raw_aqi = request.data.get('aqi', 184)
+            aqi = int(raw_aqi) if raw_aqi is not None else 184
+        except (ValueError, TypeError):
+            aqi = 184
         category = request.data.get('category', 'Moderate')
 
         mailer = MailercloudService()

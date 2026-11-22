@@ -21,7 +21,8 @@ class ShipdayService:
     BASE_URL = "https://api.shipday.com"
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.environ.get('SHIPDAY_API_KEY', 'Shipday_API_Key_AIRiac')
+        raw_key = api_key or os.environ.get('SHIPDAY_API_KEY')
+        self.api_key = raw_key.strip() if (raw_key and raw_key.strip()) else None
 
     def create_order(
         self,
@@ -51,7 +52,7 @@ class ShipdayService:
             "expectedDeliveryDate": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
         }
 
-        if self.api_key and not self.api_key.startswith("Shipday_API_Key_"):
+        if self.api_key:
             try:
                 req = urllib.request.Request(
                     f"{self.BASE_URL}/orders",
@@ -72,6 +73,8 @@ class ShipdayService:
                     }
             except Exception as exc:
                 logger.warning("Shipday API error (%s); returning simulated order", exc)
+        else:
+            logger.info("SHIPDAY_API_KEY not configured; using local order simulation.")
 
         return {
             "status": "ORDER_REGISTERED",

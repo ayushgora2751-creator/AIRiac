@@ -99,6 +99,8 @@ frontend/.cache/
 frontend/coverage/
 frontend/*.tsbuildinfo
 frontend/.eslintcache
+frontend/vite.config.js
+frontend/vite.config.d.ts
 
 # Logs
 npm-debug.log*
