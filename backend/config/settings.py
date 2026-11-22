@@ -219,12 +219,29 @@ SPECTACULAR_SETTINGS = {
     'COMPONENT_SPLIT_REQUEST': True,
 }
 
-# Cache Configuration (Redis with LocMem fallback for local unit tests)
+def _can_connect_redis(url):
+    if not url:
+        return False
+    try:
+        from urllib.parse import urlparse
+        parsed = urlparse(url)
+        if not parsed.hostname:
+            return False
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(0.3)
+        res = s.connect_ex((parsed.hostname, parsed.port or 6379))
+        s.close()
+        return res == 0
+    except Exception:
+        return False
+
+
+# Cache Configuration (Redis with LocMem fallback for local dev / tests)
 REDIS_URL = os.environ.get('CACHE_URL', os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1'))
 CACHE_BACKEND = os.environ.get('CACHE_BACKEND')
 
 if not CACHE_BACKEND:
-    if is_testing or not os.environ.get('REDIS_URL'):
+    if is_testing or not _can_connect_redis(REDIS_URL):
         CACHE_BACKEND = 'django.core.cache.backends.locmem.LocMemCache'
     else:
         CACHE_BACKEND = 'django_redis.cache.RedisCache'
