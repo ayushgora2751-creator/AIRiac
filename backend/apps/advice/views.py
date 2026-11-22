@@ -49,21 +49,37 @@ class GeminiChatAssistantView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        question = request.data.get('question', '').strip()
-        if not question:
+        if not isinstance(request.data, dict):
             return Response(
-                {"error": "Question is required"},
+                {"error": "Invalid request body: expected a JSON object"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        city = request.data.get('city', 'Chandigarh')
+        question = request.data.get('question')
+        if not isinstance(question, str) or not question.strip():
+            return Response(
+                {"error": "Question is required and must be a non-empty string"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        question = question.strip()
+
+        city = request.data.get('city') or 'Chandigarh'
+        if not isinstance(city, str):
+            city = 'Chandigarh'
+
         try:
             raw_aqi = request.data.get('aqi', 150)
             aqi = int(raw_aqi) if raw_aqi is not None else 150
         except (ValueError, TypeError):
             aqi = 150
-        category = request.data.get('category', 'Moderate')
-        prominent = request.data.get('prominent_pollutant', 'PM2.5')
+
+        category = request.data.get('category') or 'Moderate'
+        if not isinstance(category, str):
+            category = 'Moderate'
+
+        prominent = request.data.get('prominent_pollutant') or 'PM2.5'
+        if not isinstance(prominent, str):
+            prominent = 'PM2.5'
 
         service = GeminiAssistantService()
         result = service.ask(

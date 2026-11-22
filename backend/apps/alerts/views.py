@@ -33,15 +33,28 @@ class MailercloudTestAlertView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        recipient_email = request.data.get('email', 'subscriber@example.com')
-        recipient_name = request.data.get('name', 'Community Citizen')
-        city = request.data.get('city', 'Chandigarh')
+        if not isinstance(request.data, dict):
+            return Response(
+                {"error": "Invalid request body: expected a JSON object"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        recipient_email = request.data.get('email') or 'subscriber@example.com'
+        if not isinstance(recipient_email, str):
+            recipient_email = 'subscriber@example.com'
+        recipient_name = request.data.get('name') or 'Community Citizen'
+        if not isinstance(recipient_name, str):
+            recipient_name = 'Community Citizen'
+        city = request.data.get('city') or 'Chandigarh'
+        if not isinstance(city, str):
+            city = 'Chandigarh'
         try:
             raw_aqi = request.data.get('aqi', 184)
             aqi = int(raw_aqi) if raw_aqi is not None else 184
         except (ValueError, TypeError):
             aqi = 184
-        category = request.data.get('category', 'Moderate')
+        category = request.data.get('category') or 'Moderate'
+        if not isinstance(category, str):
+            category = 'Moderate'
 
         mailer = MailercloudService()
         result = mailer.send_pollution_alert(
@@ -62,12 +75,29 @@ class ShipdayDispatchView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        order_number = request.data.get('order_number', 'ORD-AIRIAC-001')
-        customer_name = request.data.get('customer_name', 'Citizen')
-        customer_address = request.data.get('address', 'Sector 17, Chandigarh')
-        customer_phone = request.data.get('phone', '+919876543210')
-        item_name = request.data.get('item', 'N95 Anti-Pollution Respirator Pack')
-        city = request.data.get('city', 'Chandigarh')
+        if not isinstance(request.data, dict):
+            return Response(
+                {"error": "Invalid request body: expected a JSON object"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        order_number = request.data.get('order_number') or 'ORD-AIRIAC-001'
+        if not isinstance(order_number, str):
+            order_number = 'ORD-AIRIAC-001'
+        customer_name = request.data.get('customer_name') or 'Citizen'
+        if not isinstance(customer_name, str):
+            customer_name = 'Citizen'
+        customer_address = request.data.get('address') or 'Sector 17, Chandigarh'
+        if not isinstance(customer_address, str):
+            customer_address = 'Sector 17, Chandigarh'
+        customer_phone = request.data.get('phone') or '+919876543210'
+        if not isinstance(customer_phone, str):
+            customer_phone = '+919876543210'
+        item_name = request.data.get('item') or 'N95 Anti-Pollution Respirator Pack'
+        if not isinstance(item_name, str):
+            item_name = 'N95 Anti-Pollution Respirator Pack'
+        city = request.data.get('city') or 'Chandigarh'
+        if not isinstance(city, str):
+            city = 'Chandigarh'
 
         shipday = ShipdayService()
         result = shipday.create_order(

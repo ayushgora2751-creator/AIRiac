@@ -11,6 +11,7 @@ import { AQIForecastSection } from './components/forecast/AQIForecastSection';
 import { SmartDailyPlanner } from './components/planner/SmartDailyPlanner';
 import { ExposureHistoryTracker } from './components/exposure/ExposureHistoryTracker';
 import { CommunityReportsFeed } from './components/community/CommunityReportsFeed';
+import { RatingWidget } from './components/community/RatingWidget';
 import { FloatingAssistantWidget } from './components/assistant/FloatingAssistantWidget';
 const SplineAtmosphereScene = React.lazy(() =>
   import('./components/3d/SplineAtmosphereScene').then((module) => ({
@@ -31,10 +32,14 @@ import {
   MOCK_CHANDIGARH_CITY_SUMMARY,
   MOCK_24H_TREND,
 } from './test/mocks/mockData';
+import { LayoutGrid, Map, TrendingUp, Users, Radio } from 'lucide-react';
+
+type DashboardTab = 'all' | 'overview' | 'map' | 'forecast' | 'community';
 
 export const App: React.FC = () => {
   const [selectedCity, setSelectedCity] = useState<string>('Chandigarh');
   const [selectedStationId, setSelectedStationId] = useState<string>('CH-SEC22-CAAQMS');
+  const [activeTab, setActiveTab] = useState<DashboardTab>('all');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [isHomeTwinOpen, setIsHomeTwinOpen] = useState(false);
@@ -93,6 +98,11 @@ export const App: React.FC = () => {
   const dominantPollutant =
     selectedStation?.dominant_pollutant || fallbackStation.dominant_pollutant;
 
+  const showOverview = activeTab === 'all' || activeTab === 'overview';
+  const showMap = activeTab === 'all' || activeTab === 'map';
+  const showForecast = activeTab === 'all' || activeTab === 'forecast';
+  const showCommunity = activeTab === 'all' || activeTab === 'community';
+
   return (
     <div className="relative min-h-screen flex flex-col text-slate-900 selection:bg-emerald-500 selection:text-white">
       {/* 300-Frame Scroll-Driven Video Background */}
@@ -116,7 +126,7 @@ export const App: React.FC = () => {
         is3DActive={is3DActive}
       />
 
-      {/* 3D Spline Interactive Atmosphere Simulation (When toggled) */}
+      {/* 3D Atmosphere Simulation (When toggled) */}
       {is3DActive && (
         <section className="relative z-20 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-4 animate-fade-in">
           <ErrorBoundary fallbackTitle="3D Scene failed to load">
@@ -139,6 +149,87 @@ export const App: React.FC = () => {
 
       {/* Main Dashboard Container */}
       <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* Data Freshness Bar & Tab Navigation */}
+        <section className="flex flex-col md:flex-row items-center justify-between gap-3 bg-white/80 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/60 shadow-sm text-xs">
+          {/* Data Freshness Indicator */}
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <span className="font-bold text-slate-800 flex items-center gap-1.5">
+              <Radio className="w-3.5 h-3.5 text-emerald-600" />
+              Live CAAQMS Network • {selectedCity}
+            </span>
+            <span className="text-slate-300">|</span>
+            <span className="text-slate-500 font-mono text-[11px]">
+              Updated: Just now (Fresh &lt;1h)
+            </span>
+          </div>
+
+          {/* View Mode Tabs */}
+          <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/80 overflow-x-auto max-w-full">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all ${
+                activeTab === 'all'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>All</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all ${
+                activeTab === 'overview'
+                  ? 'bg-white text-emerald-800 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <span>Overview</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('map')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all ${
+                activeTab === 'map'
+                  ? 'bg-white text-emerald-800 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Map className="w-3.5 h-3.5" />
+              <span>Map & Routes</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('forecast')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all ${
+                activeTab === 'forecast'
+                  ? 'bg-white text-emerald-800 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>Forecast</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('community')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs transition-all ${
+                activeTab === 'community'
+                  ? 'bg-white text-emerald-800 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Community</span>
+            </button>
+          </div>
+        </section>
+
         {/* City Summary Hero */}
         <ErrorBoundary fallbackTitle="City Overview could not be displayed">
           <CityOverview
@@ -148,92 +239,110 @@ export const App: React.FC = () => {
         </ErrorBoundary>
 
         {/* Spatial Map and Trend Analytics */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-          {/* Left Column: Spatial Map & Exposure Route Planner */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900 bg-white/70 backdrop-blur-md px-3 py-1 rounded-lg border border-white/50 shadow-sm">
-                {selectedCity} Station Network & Heatmap
-              </h3>
-              <span className="text-xs text-slate-700 bg-white/75 backdrop-blur-md px-2 py-1 rounded-lg border border-white/50 shadow-sm">
-                Click pin to inspect station
-              </span>
+        {showMap && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start animate-fade-in">
+            {/* Left Column: Spatial Map & Exposure Route Planner */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold text-slate-900 bg-white/70 backdrop-blur-md px-3 py-1 rounded-lg border border-white/50 shadow-sm">
+                  {selectedCity} Station Network & Heatmap
+                </h3>
+                <span className="text-xs text-slate-700 bg-white/75 backdrop-blur-md px-2 py-1 rounded-lg border border-white/50 shadow-sm">
+                  Click pin to inspect station
+                </span>
+              </div>
+
+              <ErrorBoundary fallbackTitle="Geospatial Map failed to render">
+                <ChandigarhMap
+                  stations={stations}
+                  selectedStationId={selectedStationId}
+                  onSelectStation={(id) => setSelectedStationId(id)}
+                  center={currentCityMeta.center}
+                  zoom={currentCityMeta.zoom}
+                />
+              </ErrorBoundary>
+
+              <ErrorBoundary fallbackTitle="Clean Route Planner could not be loaded">
+                <CleanRoutePlanner
+                  stations={stations}
+                  city={selectedCity}
+                />
+              </ErrorBoundary>
             </div>
 
-            <ErrorBoundary fallbackTitle="Geospatial Map failed to render">
-              <ChandigarhMap
-                stations={stations}
-                selectedStationId={selectedStationId}
-                onSelectStation={(id) => setSelectedStationId(id)}
-                center={currentCityMeta.center}
-                zoom={currentCityMeta.zoom}
-              />
-            </ErrorBoundary>
+            {/* Right Column: Diurnal Curve & Multi-Day Forecast */}
+            <div className="space-y-4">
+              <ErrorBoundary fallbackTitle="Pollution Trend Chart failed to render">
+                <TrendChart
+                  data={trendSeries}
+                  stationName={selectedStation?.name || `${selectedCity} Station`}
+                />
+              </ErrorBoundary>
 
-            <ErrorBoundary fallbackTitle="Clean Route Planner could not be loaded">
-              <CleanRoutePlanner
-                stations={stations}
-                city={selectedCity}
-              />
-            </ErrorBoundary>
+              <ErrorBoundary fallbackTitle="AQI Forecast failed to render">
+                <AQIForecastSection
+                  trendSeries={trendSeries}
+                  citySummary={citySummary}
+                />
+              </ErrorBoundary>
+            </div>
           </div>
-
-          {/* Right Column: Diurnal Curve & Multi-Day Forecast */}
-          <div className="space-y-4">
-            <ErrorBoundary fallbackTitle="Pollution Trend Chart failed to render">
-              <TrendChart
-                data={trendSeries}
-                stationName={selectedStation?.name || `${selectedCity} Station`}
-              />
-            </ErrorBoundary>
-
-            <ErrorBoundary fallbackTitle="AQI Forecast failed to render">
-              <AQIForecastSection
-                trendSeries={trendSeries}
-                citySummary={citySummary}
-              />
-            </ErrorBoundary>
-          </div>
-        </div>
+        )}
 
         {/* Smart Daily Planner (Hourly Activity Optimizer) */}
-        <ErrorBoundary fallbackTitle="Smart Daily Planner could not be loaded">
-          <SmartDailyPlanner
-            trendSeries={trendSeries}
-            citySummary={citySummary}
-          />
-        </ErrorBoundary>
+        {showForecast && (
+          <ErrorBoundary fallbackTitle="Smart Daily Planner could not be loaded">
+            <SmartDailyPlanner
+              trendSeries={trendSeries}
+              citySummary={citySummary}
+            />
+          </ErrorBoundary>
+        )}
 
         {/* 7-Pollutant Sub-Index Breakdown */}
-        <ErrorBoundary fallbackTitle="Pollutant Breakdown could not be displayed">
-          <PollutantGrid
-            pollutants={pollutants}
-            dominantPollutant={dominantPollutant}
-          />
-        </ErrorBoundary>
+        {showOverview && (
+          <ErrorBoundary fallbackTitle="Pollutant Breakdown could not be displayed">
+            <PollutantGrid
+              pollutants={pollutants}
+              dominantPollutant={dominantPollutant}
+            />
+          </ErrorBoundary>
+        )}
 
         {/* Personal Exposure Dosimetry & Inhalation Tracker */}
-        <ErrorBoundary fallbackTitle="Personal Exposure Tracker could not be loaded">
-          <ExposureHistoryTracker
-            citySummary={citySummary}
-          />
-        </ErrorBoundary>
+        {showOverview && (
+          <ErrorBoundary fallbackTitle="Personal Exposure Tracker could not be loaded">
+            <ExposureHistoryTracker
+              citySummary={citySummary}
+            />
+          </ErrorBoundary>
+        )}
 
         {/* Contextual Health Advisory */}
-        <ErrorBoundary fallbackTitle="Health Advisory could not be displayed">
-          <HealthAdvice
-            category={citySummary?.category || 'Moderate'}
-            aqi={citySummary?.overall_aqi ?? 100}
-          />
-        </ErrorBoundary>
+        {showOverview && (
+          <ErrorBoundary fallbackTitle="Health Advisory could not be displayed">
+            <HealthAdvice
+              category={citySummary?.category || 'Moderate'}
+              aqi={citySummary?.overall_aqi ?? 100}
+            />
+          </ErrorBoundary>
+        )}
 
-        {/* Community Reports Hotspot Feed */}
-        <ErrorBoundary fallbackTitle="Community Reports Feed could not be loaded">
-          <CommunityReportsFeed
-            citySummary={citySummary}
-            onOpenReportModal={() => setIsReportOpen(true)}
-          />
-        </ErrorBoundary>
+        {/* Community Reports Hotspot Feed & Rating Widget */}
+        {showCommunity && (
+          <div className="space-y-6 animate-fade-in">
+            <ErrorBoundary fallbackTitle="Community Reports Feed could not be loaded">
+              <CommunityReportsFeed
+                citySummary={citySummary}
+                onOpenReportModal={() => setIsReportOpen(true)}
+              />
+            </ErrorBoundary>
+
+            <ErrorBoundary fallbackTitle="Platform Reviews could not be displayed">
+              <RatingWidget />
+            </ErrorBoundary>
+          </div>
+        )}
       </main>
 
       {/* Floating Instant AI Assistant Widget */}

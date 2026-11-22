@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, User, Sparkles, BookOpen, X } from 'lucide-react';
+import { Bot, Send, User, Sparkles, BookOpen, X, ThumbsUp, ThumbsDown, CheckCircle2, RotateCcw } from 'lucide-react';
 import { CityAQISummary } from '../../types/aqi';
 import { apiClient } from '../../api/client';
 
@@ -13,7 +13,9 @@ interface Message {
     ruleId: string;
     guideline: string;
     safeWindow?: string;
+    aiModel?: string;
   };
+  feedback?: 'helpful' | 'unhelpful' | null;
   timestamp: string;
 }
 
@@ -36,23 +38,55 @@ export const AirAssistantModal: React.FC<AirAssistantModalProps> = ({
   onClose,
   citySummary,
 }) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 'welcome',
-      sender: 'assistant',
-      text: `Hello! I am your BreatheWise Environmental Health Assistant for **${citySummary.city}**. Current AQI is **${citySummary.overall_aqi} (${citySummary.category})**. Ask me anything about outdoor safety, masks, indoor ventilation, or precautions.`,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+  const buildWelcomeMessage = (city: string, aqi: number, category: string): Message => ({
+    id: `welcome-${city}-${Date.now()}`,
+    sender: 'assistant',
+    text: `Hello! I am your AIRiac Environmental Health Assistant for **${city}**.\n\nCurrent ambient AQI is **${aqi} (${category})**.\nAsk me anything about outdoor safety, jogging, N95 masks, ventilation windows, or health precautions.`,
+    why: {
+      currentAQI: aqi,
+      category,
+      ruleId: 'RULE-GROUNDING-BASELINE',
+      guideline: 'CPCB National Ambient Air Quality Index (NAQI) Standard & WHO 2021 Guidelines.',
+      aiModel: 'Gemini + CPCB Rule Validation Layer',
     },
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+  });
+
+  const [messages, setMessages] = useState<Message[]>([
+    buildWelcomeMessage(citySummary.city, citySummary.overall_aqi, citySummary.category),
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
+  // Sync assistant context dynamically whenever city or AQI updates
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setMessages([
+      buildWelcomeMessage(citySummary.city, citySummary.overall_aqi, citySummary.category),
+    ]);
+  }, [citySummary.city, citySummary.overall_aqi]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView?.({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
   if (!isOpen) return null;
+
+  const handleResetThread = () => {
+    setMessages([
+      buildWelcomeMessage(citySummary.city, citySummary.overall_aqi, citySummary.category),
+    ]);
+  };
+
+  const handleFeedback = (messageId: string, rating: 'helpful' | 'unhelpful') => {
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === messageId
+          ? { ...msg, feedback: msg.feedback === rating ? null : rating }
+          : msg
+      )
+    );
+  };
 
   const getRuleAnswer = (question: string) => {
     const q = question.toLowerCase();
@@ -68,13 +102,13 @@ export const AirAssistantModal: React.FC<AirAssistantModalProps> = ({
         };
       } else if (aqi <= 200) {
         return {
-          text: `It is generally acceptable for healthy adults to go outside, but individuals with asthma or cardiovascular conditions should limit prolonged heavy physical exertion. Current AQI is ${aqi} (${cat}).`,
+          text: `It is generally acceptable for healthy adults to go outside, but individuals with asthma or cardiovascular conditions should limit prolonged heavy physical exertion. Current AQI in ${citySummary.city} is ${aqi} (${cat}).`,
           ruleId: 'RULE-OUTDOOR-MODERATE-02',
           guideline: 'CPCB Advisory: Moderate band may cause breathing discomfort to people with sensitive lungs.',
         };
       } else {
         return {
-          text: `It is NOT recommended to spend prolonged time outside in ${citySummary.city}. With an AQI of ${aqi} (${cat}), particulate concentrations can irritate airways and trigger severe respiratory distress.`,
+          text: `It is NOT recommended to spend prolonged time outside in ${citySummary.city}. With an AQI of ${aqi} (${cat}), particulate concentrations can irritate airways and trigger respiratory distress.`,
           ruleId: 'RULE-OUTDOOR-UNSAFE-03',
           guideline: 'CPCB Health Notice: Poor/Severe bands require minimizing all non-essential outdoor exposure.',
         };
@@ -84,19 +118,19 @@ export const AirAssistantModal: React.FC<AirAssistantModalProps> = ({
     if (q.includes('exercise') || q.includes('jog') || q.includes('run') || q.includes('workout')) {
       if (aqi <= 100) {
         return {
-          text: `You can freely exercise and run outdoors today! Conditions are optimal with low particulate burden.`,
+          text: `You can freely exercise and run outdoors in ${citySummary.city} today! Conditions are optimal with low particulate burden.`,
           ruleId: 'RULE-EXERCISE-OPTIMAL',
           guideline: 'WHO Global Air Quality Guidelines 2021: Low exposure zone supports vigorous outdoor athletics.',
         };
       } else if (aqi <= 200) {
         return {
-          text: `Substitute intense cardio with light walking, or shift your workout indoors. If running outside, avoid early morning and late evening rush hours when ground inversions trap smog.`,
+          text: `Substitute intense cardio with light walking, or shift your workout indoors in ${citySummary.city}. If running outside, avoid early morning and late evening rush hours when ground inversions trap smog.`,
           ruleId: 'RULE-EXERCISE-CAUTION',
           guideline: 'Indian NAQI Guidelines: Heavy ventilation increases lung deposition of PM2.5 threefold during moderate smog.',
         };
       } else {
         return {
-          text: `Avoid all outdoor running and intense exercise! At AQI ${aqi}, exercising outdoors forces large volumes of PM2.5 and PM10 directly into deep alveolar lung tissue. Move all workouts to an indoor filtered space.`,
+          text: `Avoid all outdoor running and intense exercise in ${citySummary.city}! At AQI ${aqi}, exercising outdoors forces large volumes of PM2.5 and PM10 directly into deep alveolar lung tissue. Move all workouts to an indoor filtered space.`,
           ruleId: 'RULE-EXERCISE-PROHIBIT',
           guideline: 'CPCB Health Advisory: High pollution exercise ban to prevent acute bronchospasms.',
         };
@@ -106,19 +140,19 @@ export const AirAssistantModal: React.FC<AirAssistantModalProps> = ({
     if (q.includes('mask') || q.includes('n95')) {
       if (aqi <= 100) {
         return {
-          text: `A mask is not necessary today in ${citySummary.city} for normal outdoor activities.`,
+          text: `A mask is not necessary today in ${citySummary.city} for normal outdoor activities. Current AQI is ${aqi} (${cat}).`,
           ruleId: 'RULE-MASK-OPTIONAL',
           guideline: 'CPCB Standard: Masks not indicated below AQI 100 unless working in heavy industrial dust.',
         };
       } else if (aqi <= 200) {
         return {
-          text: `A tight-fitting N95 or FFP2 respirator is recommended if you commute through dense traffic corridors or have respiratory sensitivity.`,
+          text: `A tight-fitting N95 or FFP2 respirator is recommended in ${citySummary.city} if you commute through dense traffic corridors or have respiratory sensitivity (AQI: ${aqi}).`,
           ruleId: 'RULE-MASK-RECOMMENDED',
           guideline: 'ICMR Respiratory Protection Protocol: N95 filters at least 95% of PM2.5 particulates.',
         };
       } else {
         return {
-          text: `YES, a certified N95 / FFP2 mask is strictly necessary whenever stepping outdoors! Cloth masks and surgical masks do not filter fine PM2.5 particles effectively.`,
+          text: `YES, a certified N95 / FFP2 mask is strictly necessary in ${citySummary.city} whenever stepping outdoors! Cloth masks and surgical masks do not filter fine PM2.5 particles effectively.`,
           ruleId: 'RULE-MASK-MANDATORY',
           guideline: 'CPCB/ICMR Emergency Smog Protocol: Proper seal N95 mask mandatory above AQI 200.',
         };
@@ -136,7 +170,7 @@ export const AirAssistantModal: React.FC<AirAssistantModalProps> = ({
 
     if (q.includes('sensitive') || q.includes('precaution') || q.includes('children') || q.includes('elderly')) {
       return {
-        text: `Key precautions for sensitive groups (children, seniors, asthma/heart patients) in ${citySummary.city} today:
+        text: `Key precautions for sensitive groups (children, seniors, asthma/heart patients) in ${citySummary.city} today (AQI: ${aqi}):
 1. Keep rescue inhalers and prescribed respiratory medications readily accessible.
 2. Run a HEPA air purifier inside primary sleeping and living areas.
 3. Keep windows and doors sealed during early morning and night.
@@ -147,7 +181,7 @@ export const AirAssistantModal: React.FC<AirAssistantModalProps> = ({
     }
 
     return {
-      text: `Based on current observations in ${citySummary.city} (AQI ${aqi}, ${cat}), our deterministic impact engine recommends staying aware of air conditions, avoiding biomass smoke zones, and checking diurnal trends before outdoor activities.`,
+      text: `Based on current observations in ${citySummary.city} (AQI ${aqi}, ${cat}), our safety validation engine recommends staying aware of air conditions, avoiding biomass smoke zones, and checking diurnal trends before outdoor activities.`,
       ruleId: 'RULE-GENERAL-EXPOSURE',
       guideline: 'CPCB Indian National Air Quality Index Standards.',
     };
@@ -178,17 +212,21 @@ export const AirAssistantModal: React.FC<AirAssistantModalProps> = ({
       });
 
       const data = res.data;
+      const ruleFallback = getRuleAnswer(query);
+
       const botMsg: Message = {
         id: String(Date.now() + 1),
         sender: 'assistant',
-        text: data.reply || getRuleAnswer(query).text,
+        text: data.reply || ruleFallback.text,
         why: {
           currentAQI: citySummary.overall_aqi,
           category: citySummary.category,
-          ruleId: data.is_llm ? 'GEMINI-AIRIAC-AI' : (data.rule_id || 'RULE-SAFETY'),
+          ruleId: data.is_llm ? 'GEMINI-CPCB-SAFETY-VERIFIED' : (data.rule_id || ruleFallback.ruleId),
           guideline: data.is_llm
-            ? 'Google Gemini API • CPCB NAQI Medical Guidelines'
-            : 'CPCB National Ambient Air Quality Standards',
+            ? 'Google Gemini API grounded with CPCB NAQI Medical Guidelines'
+            : ruleFallback.guideline,
+          safeWindow: ruleFallback.safeWindow,
+          aiModel: data.is_llm ? (data.model || 'Google Gemini AI') : 'BreatheWise CPCB Safety Engine',
         },
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
@@ -205,6 +243,7 @@ export const AirAssistantModal: React.FC<AirAssistantModalProps> = ({
           ruleId: rule.ruleId,
           guideline: rule.guideline,
           safeWindow: rule.safeWindow,
+          aiModel: 'Deterministic CPCB Rule Engine (Safe Baseline)',
         },
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
@@ -215,7 +254,10 @@ export const AirAssistantModal: React.FC<AirAssistantModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
+    <div
+      data-testid="air-assistant-modal"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in"
+    >
       <div className="relative w-full max-w-2xl bg-white/95 backdrop-blur-xl rounded-3xl border border-white/60 shadow-2xl flex flex-col h-[640px] overflow-hidden">
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-slate-200/80 bg-gradient-to-r from-emerald-600 to-teal-700 text-white flex items-center justify-between">
@@ -225,23 +267,51 @@ export const AirAssistantModal: React.FC<AirAssistantModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-base">BreatheWise Air AI Assistant</h3>
+                <h3 className="font-bold text-base">AIRiac AI Air Quality Assistant</h3>
                 <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-400/20 text-emerald-200 font-mono border border-emerald-400/30">
-                  Rule-Engine CPCB
+                  Dual-Engine: Gemini + CPCB Rules
                 </span>
               </div>
               <p className="text-xs text-emerald-100 opacity-90">
-                Context: {citySummary.city} • AQI {citySummary.overall_aqi} ({citySummary.category})
+                Active Context: {citySummary.city} • AQI {citySummary.overall_aqi} ({citySummary.category})
               </p>
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-2 rounded-full hover:bg-white/20 transition-colors text-white"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleResetThread}
+              title="Reset conversation"
+              className="p-2 rounded-full hover:bg-white/20 transition-colors text-white"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full hover:bg-white/20 transition-colors text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Live Context Banner */}
+        <div
+          data-testid="assistant-city-badge"
+          className="px-4 py-2 bg-emerald-50/90 border-b border-emerald-200/60 flex items-center justify-between text-xs text-emerald-900"
+        >
+          <div className="flex items-center gap-2 font-medium">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <span>
+              Now answering for <strong>{citySummary.city}</strong> • Current AQI <strong>{citySummary.overall_aqi} ({citySummary.category})</strong>
+            </span>
+          </div>
+          <span className="text-[11px] text-emerald-700 font-mono">
+            Pollutant: {citySummary.dominant_pollutant || 'PM2.5'}
+          </span>
         </div>
 
         {/* Message Thread */}
@@ -274,27 +344,74 @@ export const AirAssistantModal: React.FC<AirAssistantModalProps> = ({
 
                 {/* Explainability Breakdown Card */}
                 {msg.why && (
-                  <div className="mt-3 pt-3 border-t border-slate-200 text-xs text-slate-600 space-y-1 bg-white/80 p-2.5 rounded-xl border border-slate-100">
-                    <div className="flex items-center gap-1.5 font-semibold text-emerald-800">
-                      <BookOpen className="w-3.5 h-3.5" />
-                      <span>Explainability & Source Citation</span>
+                  <div className="mt-3 pt-3 border-t border-slate-200 text-xs text-slate-600 space-y-1.5 bg-white/90 p-2.5 rounded-xl border border-slate-200 shadow-2xs">
+                    <div className="flex items-center justify-between text-emerald-800 font-semibold">
+                      <div className="flex items-center gap-1.5">
+                        <BookOpen className="w-3.5 h-3.5" />
+                        <span>Explainability & Grounding Verification</span>
+                      </div>
+                      {msg.why.aiModel && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono font-normal">
+                          {msg.why.aiModel}
+                        </span>
+                      )}
                     </div>
                     <p className="text-[11px] text-slate-500">
-                      <strong>Rule Trigger:</strong> {msg.why.ruleId} • <strong>City AQI:</strong> {msg.why.currentAQI}
+                      <strong>Rule Trigger:</strong> {msg.why.ruleId} • <strong>Context AQI:</strong> {msg.why.currentAQI} ({msg.why.category})
                     </p>
-                    <p className="text-[11px] text-slate-600 italic">
+                    <p className="text-[11px] text-slate-700 italic">
                       "{msg.why.guideline}"
                     </p>
+                    {msg.why.safeWindow && (
+                      <p className="text-[11px] text-emerald-700 font-bold">
+                        Recommended Window: {msg.why.safeWindow}
+                      </p>
+                    )}
                   </div>
                 )}
 
-                <span
-                  className={`block text-[10px] mt-1.5 opacity-70 ${
-                    msg.sender === 'user' ? 'text-emerald-100 text-right' : 'text-slate-400'
-                  }`}
-                >
-                  {msg.timestamp}
-                </span>
+                {/* Footer with Timestamp and Feedback Ratings */}
+                <div className="flex items-center justify-between mt-2 pt-1">
+                  <span
+                    className={`text-[10px] opacity-70 ${
+                      msg.sender === 'user' ? 'text-emerald-100' : 'text-slate-400'
+                    }`}
+                  >
+                    {msg.timestamp}
+                  </span>
+
+                  {msg.sender === 'assistant' && (
+                    <div className="flex items-center gap-2">
+                      {msg.feedback ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-medium">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          Feedback recorded
+                        </span>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <button
+                            data-testid="assistant-helpful-btn"
+                            onClick={() => handleFeedback(msg.id, 'helpful')}
+                            className="p-1 rounded hover:bg-slate-200 text-slate-500 hover:text-emerald-600 transition-colors"
+                            title="Helpful answer"
+                            aria-label="Helpful"
+                          >
+                            <ThumbsUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            data-testid="assistant-unhelpful-btn"
+                            onClick={() => handleFeedback(msg.id, 'unhelpful')}
+                            className="p-1 rounded hover:bg-slate-200 text-slate-500 hover:text-rose-600 transition-colors"
+                            title="Not helpful"
+                            aria-label="Not helpful"
+                          >
+                            <ThumbsDown className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -302,7 +419,7 @@ export const AirAssistantModal: React.FC<AirAssistantModalProps> = ({
           {isTyping && (
             <div className="flex items-center gap-2 text-slate-500 text-xs italic pl-11">
               <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
-              Evaluating CPCB health rules...
+              Validating against CPCB standards & generating advice...
             </div>
           )}
           <div ref={messagesEndRef} />
@@ -310,7 +427,7 @@ export const AirAssistantModal: React.FC<AirAssistantModalProps> = ({
 
         {/* Suggested Quick Questions */}
         <div className="px-4 py-2 border-t border-slate-200 bg-slate-50 flex items-center gap-2 overflow-x-auto no-scrollbar">
-          <span className="text-[11px] font-semibold text-slate-500 shrink-0">Suggestions:</span>
+          <span className="text-[11px] font-semibold text-slate-500 shrink-0">Quick Prompts:</span>
           {SUGGESTED_QUESTIONS.map((q, idx) => (
             <button
               key={idx}

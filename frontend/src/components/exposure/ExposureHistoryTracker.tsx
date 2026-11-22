@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart } from 'lucide-react';
+import { Heart, Info, ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react';
 import { CityAQISummary } from '../../types/aqi';
 
 interface ExposureHistoryTrackerProps {
@@ -14,8 +14,9 @@ export const ExposureHistoryTracker: React.FC<ExposureHistoryTrackerProps> = ({
   const [profile, setProfile] = useState<UserProfileType>('commuter');
   const [outdoorHours, setOutdoorHours] = useState<number>(3);
   const [woreMask, setWoreMask] = useState<boolean>(true);
+  const [showFormulaDetails, setShowFormulaDetails] = useState<boolean>(false);
 
-  // Ventilation rate in m3/day depending on activity level
+  // Ventilation rate in m3/day depending on physical exertion level
   const breathingRates: Record<UserProfileType, number> = {
     sedentary: 10,
     commuter: 14,
@@ -38,8 +39,10 @@ export const ExposureHistoryTracker: React.FC<ExposureHistoryTrackerProps> = ({
   // Daily PM2.5 Inhalation in micrograms (Concentration ug/m3 * Breathing Volume m3/day)
   const dailyInhaledMicrograms = Math.round(effectiveConcentration * breathingRates[profile]);
 
-  // Cigarettes equivalent: Berkeley Earth formula (~22 ug/m3 24h = 1 cigarette)
-  const cigaretteEquiv = Math.max(0.1, Number((effectiveConcentration / 22).toFixed(1)));
+  // Berkeley Earth Reference: 1 Cigarette = 22 ug/m3 ambient 24h exposure.
+  // Standard human tidal volume is ~12 m3/day, meaning 22 ug/m3 * 12 m3 = ~264 ug of inhaled PM2.5 per cigarette.
+  const cigaretteEquiv = Math.max(0.1, Number((dailyInhaledMicrograms / 264).toFixed(1)));
+  const ambientCigaretteEquiv = Math.max(0.1, Number((effectiveConcentration / 22).toFixed(1)));
 
   // WHO safe daily guideline limit: 15 ug/m3 * 12 m3 = ~180 ug/day
   const whoDailyLimit = 180;
@@ -66,14 +69,47 @@ export const ExposureHistoryTracker: React.FC<ExposureHistoryTrackerProps> = ({
             <span>Personal Exposure & Inhalation Dosimetry</span>
           </h3>
           <p className="text-xs text-slate-500">
-            Biometric inhalation dosage tracking based on respiratory tidal volumes and ambient PM2.5
+            Biometric inhalation dosage tracking based on respiratory tidal volumes and ambient PM2.5 in {citySummary.city}
           </p>
         </div>
 
-        <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-300">
-          Berkeley Earth Dosimetry Model
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-300">
+            Berkeley Earth Dosimetry Model
+          </span>
+          <button
+            onClick={() => setShowFormulaDetails(!showFormulaDetails)}
+            className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-semibold"
+          >
+            <Info className="w-3.5 h-3.5" />
+            <span>{showFormulaDetails ? 'Hide Formula' : 'Formula & Source'}</span>
+            {showFormulaDetails ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+        </div>
       </div>
+
+      {/* Reconciled Methodology Explanation Box */}
+      {showFormulaDetails && (
+        <div className="p-4 rounded-xl bg-indigo-50/70 border border-indigo-200 text-xs text-indigo-950 space-y-2 animate-fade-in">
+          <div className="flex items-center gap-1.5 font-bold text-indigo-900">
+            <ShieldCheck className="w-4 h-4 text-indigo-700" />
+            <span>Scientific Reconciliation & Conversion Assumptions</span>
+          </div>
+          <p className="text-[11px] text-indigo-900 leading-relaxed">
+            <strong>Source Citation:</strong> Berkeley Earth study (Muller & Muller, 2015).
+            The rule establishes that a 24-hour ambient PM2.5 exposure of <strong>22 µg/m³</strong> is equivalent to smoking <strong>1 cigarette</strong>.
+          </p>
+          <div className="p-2.5 rounded-lg bg-white/90 border border-indigo-100 font-mono text-[11px] text-indigo-800 space-y-1">
+            <p>1 Cigarette ≈ 22 µg/m³ ambient 24-hr concentration</p>
+            <p>Reference daily tidal air volume = 12 m³/day</p>
+            <p>Inhaled PM2.5 particulate mass per cigarette = 22 µg/m³ × 12 m³ = <strong>264 µg / cigarette</strong></p>
+            <p className="font-sans text-[11px] text-slate-600 pt-1">
+              At your current daily dose of <strong>{dailyInhaledMicrograms} µg</strong>, dividing by 264 µg/cig yields <strong>{cigaretteEquiv} cigarettes/day</strong>.
+              (Note: dividing directly by 22 without adjusting for inhaled air volume incorrectly conflates concentration µg/m³ with total inhaled mass µg).
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Main Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -86,11 +122,11 @@ export const ExposureHistoryTracker: React.FC<ExposureHistoryTrackerProps> = ({
             {dailyInhaledMicrograms} <span className="text-sm font-normal text-slate-300">µg / day</span>
           </div>
           <span className="text-[11px] text-rose-400 font-medium block">
-            {Number(excessFactor) > 1.0 ? `⚠️ ${excessFactor}x above WHO safe limit` : '✓ Within WHO safe band'}
+            {Number(excessFactor) > 1.0 ? `⚠️ ${excessFactor}x above WHO safe limit (180 µg)` : '✓ Within WHO safe band'}
           </span>
         </div>
 
-        {/* Cigarette Equivalent Metric */}
+        {/* Reconciled Cigarette Equivalent Metric */}
         <div className="p-4 rounded-xl bg-white border border-slate-200 space-y-1 shadow-xs">
           <span className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider block">
             Smog Inhalation Equivalence
@@ -99,7 +135,7 @@ export const ExposureHistoryTracker: React.FC<ExposureHistoryTrackerProps> = ({
             {cigaretteEquiv} <span className="text-sm font-normal text-slate-500">cigarettes / day</span>
           </div>
           <span className="text-[11px] text-slate-500 block">
-            Passive lung alveolar particulate deposition
+            ~264 µg PM2.5 inhaled dose per cigarette ({ambientCigaretteEquiv} cigs via 22 µg/m³ ambient rule)
           </span>
         </div>
 

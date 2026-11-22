@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { calculateSubIndex } from '../utils/cpcbAqi';
 import {
   CityAQISummary,
   StationData,
@@ -154,7 +155,10 @@ export const airQualityApi = {
           typeof p === 'number'
             ? p
             : p?.value ?? p?.concentration ?? p?.reading ?? 0;
+        const valNum = Number(val) || 0;
+        const computedSub = calculateSubIndex(key, valNum);
         const sub =
+          computedSub ??
           (typeof p === 'object' && p !== null ? p.sub_index : undefined) ??
           (s.sub_indices ? s.sub_indices[key] : undefined) ??
           0;

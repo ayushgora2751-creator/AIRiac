@@ -1,6 +1,7 @@
 import React from 'react';
 import { PollutantMap, PollutantKey } from '../../types/aqi';
 import { MetricCard } from '../common/MetricCard';
+import { calculateSubIndex } from '../../utils/cpcbAqi';
 
 interface PollutantGridProps {
   pollutants: PollutantMap;
@@ -41,7 +42,7 @@ export const PollutantGrid: React.FC<PollutantGridProps> = ({
           7-Pollutant Sub-Index Breakdown
         </h3>
         <span className="text-xs text-slate-500">
-          CPCB Indian National Air Quality Standards
+          CPCB Indian National Air Quality Standards (Piecewise Linear)
         </span>
       </div>
 
@@ -55,6 +56,9 @@ export const PollutantGrid: React.FC<PollutantGridProps> = ({
             dominantPollutant?.toLowerCase() === meta.label.toLowerCase() ||
             dominantPollutant?.toLowerCase() === key.toLowerCase();
 
+          // Calculate sub-index dynamically according to official CPCB breakpoints
+          const computedSubIndex = calculateSubIndex(key, item.value) ?? item.sub_index;
+
           return (
             <MetricCard
               key={key}
@@ -62,7 +66,7 @@ export const PollutantGrid: React.FC<PollutantGridProps> = ({
               fullName={meta.fullName}
               value={item.value}
               unit={item.unit}
-              subIndex={item.sub_index}
+              subIndex={computedSubIndex}
               isProminent={isProminent}
             />
           );
