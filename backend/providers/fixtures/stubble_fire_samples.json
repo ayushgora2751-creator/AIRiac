@@ -1,0 +1,50 @@
+[
+  {
+    "source_id": "FIRMS-MODIS-20261122-001",
+    "latitude": 30.6850,
+    "longitude": 76.6200,
+    "brightness_temperature": 332.4,
+    "frp": 48.6,
+    "confidence": "high",
+    "satellite": "VIIRS_SNPP",
+    "district": "SAS Nagar (Mohali)",
+    "state": "Punjab",
+    "detected_at": "2026-11-22T06:45:00Z"
+  },
+  {
+    "source_id": "FIRMS-MODIS-20261122-002",
+    "latitude": 30.5200,
+    "longitude": 76.4500,
+    "brightness_temperature": 341.2,
+    "frp": 72.3,
+    "confidence": "high",
+    "satellite": "VIIRS_SNPP",
+    "district": "Patiala",
+    "state": "Punjab",
+    "detected_at": "2026-11-22T07:15:00Z"
+  },
+  {
+    "source_id": "FIRMS-MODIS-20261122-003",
+    "latitude": 30.6400,
+    "longitude": 76.3800,
+    "brightness_temperature": 325.8,
+    "frp": 35.1,
+    "confidence": "nominal",
+    "satellite": "MODIS",
+    "district": "Fatehgarh Sahib",
+    "state": "Punjab",
+    "detected_at": "2026-11-22T07:50:00Z"
+  },
+  {
+    "source_id": "FIRMS-MODIS-20261122-004",
+    "latitude": 30.3800,
+    "longitude": 76.7800,
+    "brightness_temperature": 319.4,
+    "frp": 29.8,
+    "confidence": "nominal",
+    "satellite": "VIIRS_NOAA20",
+    "district": "Ambala",
+    "state": "Haryana",
+    "detected_at": "2026-11-22T08:10:00Z"
+  }
+]

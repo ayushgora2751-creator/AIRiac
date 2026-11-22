@@ -1,0 +1,36 @@
+# Python Virtual Environments
+venv/
+.venv/
+ENV/
+env/
+
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# Test & Coverage caches
+.pytest_cache/
+.cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Git and repo metadata
+.git/
+.gitignore
+.gitattributes
+
+# Environment files and secrets
+.env*
+*.env
+
+# Local Django media, static, logs, and databases
+*.log
+*.sqlite3
+*.db
+media/
+static_collected/

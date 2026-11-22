@@ -1,0 +1,74 @@
+[
+  {
+    "code": "CH-SEC22-CAAQMS",
+    "name": "Sector 22 CAAQMS",
+    "station_type": "CAAQMS",
+    "operator": "CPCC",
+    "sector": "Sector 22",
+    "latitude": 30.7259,
+    "longitude": 76.7744,
+    "elevation_m": 321.0,
+    "base_pm25": 82.0,
+    "base_pm10": 150.0
+  },
+  {
+    "code": "CH-PU-SEC25",
+    "name": "Panjab University, Sector 25",
+    "station_type": "CAAQMS",
+    "operator": "CPCC",
+    "sector": "Sector 25",
+    "latitude": 30.7510,
+    "longitude": 76.7620,
+    "elevation_m": 325.0,
+    "base_pm25": 70.0,
+    "base_pm10": 130.0
+  },
+  {
+    "code": "CH-SEC53-CAAQMS",
+    "name": "Sector 53 (Mohali Border)",
+    "station_type": "CAAQMS",
+    "operator": "CPCC",
+    "sector": "Sector 53",
+    "latitude": 30.7180,
+    "longitude": 76.7320,
+    "elevation_m": 318.0,
+    "base_pm25": 95.0,
+    "base_pm10": 175.0
+  },
+  {
+    "code": "CH-SEC17-CAAQMS",
+    "name": "Sector 17 City Centre",
+    "station_type": "CAAQMS",
+    "operator": "CPCC",
+    "sector": "Sector 17",
+    "latitude": 30.7410,
+    "longitude": 76.7850,
+    "elevation_m": 322.0,
+    "base_pm25": 85.0,
+    "base_pm10": 155.0
+  },
+  {
+    "code": "CH-IND-PH1",
+    "name": "Industrial Area Phase 1",
+    "station_type": "CAAQMS",
+    "operator": "CPCC",
+    "sector": "Industrial Area Phase 1",
+    "latitude": 30.7050,
+    "longitude": 76.8010,
+    "elevation_m": 315.0,
+    "base_pm25": 110.0,
+    "base_pm10": 210.0
+  },
+  {
+    "code": "CH-SUKHNA",
+    "name": "Sukhna Lake Ecological Station",
+    "station_type": "CAAQMS",
+    "operator": "CPCC",
+    "sector": "Sector 1",
+    "latitude": 30.7420,
+    "longitude": 76.8180,
+    "elevation_m": 330.0,
+    "base_pm25": 55.0,
+    "base_pm10": 98.0
+  }
+]

@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "airiac-backend"
+version = "1.0.0"
+description = "Urban Air Quality Assistant (AIRiac Chandigarh-first) Backend REST API"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "Django>=5.1.0,<5.2.0",
+    "djangorestframework>=3.15.0",
+    "djangorestframework-simplejwt>=5.3.1",
+    "drf-spectacular>=0.27.1",
+    "django-cors-headers>=4.3.1",
+    "django-redis>=5.4.0",
+    "redis>=5.0.1",
+    "celery>=5.4.0",
+    "django-celery-beat>=2.6.0",
+    "psycopg2-binary>=2.9.9",
+    "python-dotenv>=1.0.1",
+    "requests>=2.31.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-django>=4.8.0",
+    "pytest-mock>=3.14.0",
+]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py", "*_test.py"]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
