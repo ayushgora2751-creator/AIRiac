@@ -32,6 +32,7 @@ ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS', '')
 env_hosts = [h.strip() for h in ALLOWED_HOSTS_ENV.split(',') if h.strip()]
 
 ALLOWED_HOSTS = [
+    '*',
     'airiac-backend.onrender.com',
     '.onrender.com',
     'localhost',
@@ -44,11 +45,9 @@ ALLOWED_HOSTS = [
 # Deduplicate while preserving order
 ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS))
 
-if '*' not in ALLOWED_HOSTS and DEBUG:
-    ALLOWED_HOSTS.append('*')
-
-# Reverse Proxy SSL Header for Render deployment
+# Reverse Proxy SSL Header & Host Resolution for Render cloud deployment
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
 
 # CSRF Trusted Origins for Render cloud and local frontend
 CSRF_TRUSTED_ORIGINS_ENV = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
