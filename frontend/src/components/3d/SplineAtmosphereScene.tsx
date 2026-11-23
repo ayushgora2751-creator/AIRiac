@@ -1,25 +1,13 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import {
-  Globe,
-  Sparkles,
-  RefreshCw,
-  Layers,
-  RotateCw,
-  Compass,
-  AlertTriangle,
-  MapPin,
-} from 'lucide-react';
+import { Globe, Sparkles, RotateCw, Compass, MapPin } from 'lucide-react';
 
 interface SplineAtmosphereSceneProps {
-  modelUrl?: string;
   onClose?: () => void;
   selectedCity?: string;
 }
 
-// Coordinate markers for key Indian air monitoring hubs
 const INDIAN_CITIES = [
   { name: 'Chandigarh', lat: 30.7333, lng: 76.7794, aqi: 184, color: '#E5B800' },
   { name: 'Delhi NCR', lat: 28.6139, lng: 77.209, aqi: 312, color: '#C00000' },
@@ -29,53 +17,29 @@ const INDIAN_CITIES = [
   { name: 'Bengaluru', lat: 12.9716, lng: 77.5946, aqi: 78, color: '#92D050' },
 ];
 
-function isWebGLAvailable(): boolean {
-  try {
-    const canvas = document.createElement('canvas');
-    return !!(
-      window.WebGLRenderingContext &&
-      (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
-    );
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Converts Latitude/Longitude to 3D Cartesian coordinates on a sphere of given radius.
- */
 function latLngToVector3(lat: number, lng: number, radius: number): THREE.Vector3 {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lng + 180) * (Math.PI / 180);
-  const x = -(radius * Math.sin(phi) * Math.cos(theta));
-  const z = radius * Math.sin(phi) * Math.sin(theta);
-  const y = radius * Math.cos(phi);
-  return new THREE.Vector3(x, y, z);
+  return new THREE.Vector3(
+    -(radius * Math.sin(phi) * Math.cos(theta)),
+    radius * Math.cos(phi),
+    radius * Math.sin(phi) * Math.sin(theta)
+  );
 }
 
 export const SplineAtmosphereScene: React.FC<SplineAtmosphereSceneProps> = ({
-  modelUrl = '/models/earth.glb',
   onClose,
   selectedCity = 'Chandigarh',
 }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
-  const earthGroupRef = useRef<THREE.Group | null>(null);
   const animFrameIdRef = useRef<number | null>(null);
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadProgress, setLoadProgress] = useState(0);
-  const [hasError, setHasError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
   const [isAutoRotating, setIsAutoRotating] = useState(true);
-  const [webGLSupported, setWebGLSupported] = useState(true);
-  const [activePin, setActivePin] = useState<string | null>(selectedCity);
+  const [activePin, setActivePin] = useState<string>(selectedCity);
 
-  // Sync selectedCity prop changes to update active 3D pin
   useEffect(() => {
-    if (selectedCity) {
-      setActivePin(selectedCity);
-    }
+    if (selectedCity) setActivePin(selectedCity);
   }, [selectedCity]);
 
   const handleResetCamera = useCallback(() => {
@@ -88,216 +52,138 @@ export const SplineAtmosphereScene: React.FC<SplineAtmosphereSceneProps> = ({
   const toggleAutoRotate = useCallback(() => {
     setIsAutoRotating((prev) => {
       const next = !prev;
-      if (controlsRef.current) {
-        controlsRef.current.autoRotate = next;
-      }
+      if (controlsRef.current) controlsRef.current.autoRotate = next;
       return next;
     });
   }, []);
 
   useEffect(() => {
-    if (!isWebGLAvailable()) {
-      setWebGLSupported(false);
-      setIsLoading(false);
-      return;
-    }
-
     const container = mountRef.current;
     if (!container) return;
 
     let width = container.clientWidth || 800;
     let height = container.clientHeight || 550;
 
-    // 1. Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x030712); // slate-950
+    scene.background = new THREE.Color(0x030712);
 
-    // 2. Camera setup
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(0, 0, 4.2);
+    camera.position.set(0, 0.5, 4.2);
 
-    // 3. WebGL Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
 
-    const canvas = renderer.domElement;
-    let isDisposed = false;
-
-    const handleContextLost = (event: Event) => {
-      event.preventDefault();
-      isDisposed = true;
-      if (animFrameIdRef.current) {
-        cancelAnimationFrame(animFrameIdRef.current);
-      }
-      setHasError(true);
-      setErrorMessage('WebGL context was lost. Click retry to reinitialize 3D Earth.');
-    };
-
-    const handleContextRestored = () => {
-      setHasError(false);
-      setIsLoading(true);
-    };
-
-    canvas.addEventListener('webglcontextlost', handleContextLost, false);
-    canvas.addEventListener('webglcontextrestored', handleContextRestored, false);
-
-    // 4. Orbit Controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.rotateSpeed = 0.8;
-    controls.zoomSpeed = 1.0;
-    controls.minDistance = 2.2;
-    controls.maxDistance = 10;
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.7;
+    controls.minDistance = 2.0;
+    controls.maxDistance = 8.0;
+    controls.autoRotate = isAutoRotating;
+    controls.autoRotateSpeed = 0.6;
     controlsRef.current = controls;
 
-    // 5. Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
-    scene.add(ambientLight);
-
-    const sunLight = new THREE.DirectionalLight(0xffffff, 2.5);
-    sunLight.position.set(10, 6, 8);
+    // Lights
+    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+    const sunLight = new THREE.DirectionalLight(0xffffff, 2.2);
+    sunLight.position.set(8, 5, 6);
     scene.add(sunLight);
+    const blueLight = new THREE.DirectionalLight(0x38bdf8, 1.2);
+    blueLight.position.set(-8, -4, -6);
+    scene.add(blueLight);
 
-    const fillLight = new THREE.DirectionalLight(0x38bdf8, 1.0);
-    fillLight.position.set(-10, -5, -8);
-    scene.add(fillLight);
-
-    // 6. Starfield particle background
-    const starCount = 800;
-    const starGeometry = new THREE.BufferGeometry();
+    // Starfield Background
+    const starCount = 600;
     const starPositions = new Float32Array(starCount * 3);
     for (let i = 0; i < starCount * 3; i += 3) {
-      const radius = 25 + Math.random() * 30;
-      const u = Math.random();
-      const v = Math.random();
-      const theta = u * 2.0 * Math.PI;
-      const phi = Math.acos(2.0 * v - 1.0);
-      const r = Math.cbrt(Math.random()) * radius;
+      const r = 20 + Math.random() * 25;
+      const theta = Math.random() * 2 * Math.PI;
+      const phi = Math.acos(2 * Math.random() - 1);
       starPositions[i] = r * Math.sin(phi) * Math.cos(theta);
       starPositions[i + 1] = r * Math.sin(phi) * Math.sin(theta);
       starPositions[i + 2] = r * Math.cos(phi);
     }
-    starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    const starMaterial = new THREE.PointsMaterial({
-      color: 0x93c5fd,
-      size: 0.15,
-      transparent: true,
-      opacity: 0.7,
-    });
-    const starField = new THREE.Points(starGeometry, starMaterial);
+    const starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    const starMat = new THREE.PointsMaterial({ color: 0x93c5fd, size: 0.12, transparent: true, opacity: 0.6 });
+    const starField = new THREE.Points(starGeo, starMat);
     scene.add(starField);
 
-    // 7. Atmospheric Glow Layer
-    const atmosphereGeometry = new THREE.SphereGeometry(1.65, 48, 48);
-    const atmosphereMaterial = new THREE.MeshBasicMaterial({
+    // Procedural Globe Sphere
+    const earthRadius = 1.45;
+    const earthGroup = new THREE.Group();
+    scene.add(earthGroup);
+
+    // Earth Ocean Sphere
+    const earthGeo = new THREE.SphereGeometry(earthRadius, 64, 64);
+    const earthMat = new THREE.MeshStandardMaterial({
+      color: 0x0f2b46,
+      roughness: 0.45,
+      metalness: 0.15,
+      emissive: 0x051320,
+      emissiveIntensity: 0.3,
+    });
+    const earthMesh = new THREE.Mesh(earthGeo, earthMat);
+    earthGroup.add(earthMesh);
+
+    // Wireframe Grid / Lat-Long Meridians
+    const gridGeo = new THREE.SphereGeometry(earthRadius * 1.002, 32, 16);
+    const gridMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.12,
+    });
+    earthGroup.add(new THREE.Mesh(gridGeo, gridMat));
+
+    // Outer Atmospheric Glow
+    const atmosGeo = new THREE.SphereGeometry(earthRadius * 1.08, 48, 48);
+    const atmosMat = new THREE.MeshBasicMaterial({
       color: 0x38bdf8,
       transparent: true,
-      opacity: 0.08,
+      opacity: 0.1,
       side: THREE.BackSide,
       blending: THREE.AdditiveBlending,
     });
-    const atmosphereMesh = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
-    scene.add(atmosphereMesh);
+    scene.add(new THREE.Mesh(atmosGeo, atmosMat));
 
-    // 8. Earth Root Group
-    const earthGroup = new THREE.Group();
-    earthGroupRef.current = earthGroup;
-    scene.add(earthGroup);
+    // City AQI Pins & Beacons
+    INDIAN_CITIES.forEach((city) => {
+      const pinPos = latLngToVector3(city.lat, city.lng, earthRadius * 1.015);
+      const markerMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(0.038, 16, 16),
+        new THREE.MeshBasicMaterial({ color: new THREE.Color(city.color) })
+      );
+      markerMesh.position.copy(pinPos);
+      earthGroup.add(markerMesh);
 
-    // 9. Load Earth GLB Model
-    const loader = new GLTFLoader();
-    loader.load(
-      modelUrl,
-      (gltf) => {
-        const model = gltf.scene;
+      // Outer Beacon Ring
+      const ringMesh = new THREE.Mesh(
+        new THREE.RingGeometry(0.048, 0.068, 24),
+        new THREE.MeshBasicMaterial({
+          color: new THREE.Color(city.color),
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.7,
+        })
+      );
+      ringMesh.position.copy(pinPos);
+      ringMesh.lookAt(new THREE.Vector3(0, 0, 0));
+      earthGroup.add(ringMesh);
+    });
 
-        // Compute bounding box to normalize model scale and center it
-        const box = new THREE.Box3().setFromObject(model);
-        const center = new THREE.Vector3();
-        box.getCenter(center);
-        model.position.sub(center); // center model at (0,0,0)
-
-        const size = new THREE.Vector3();
-        box.getSize(size);
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const targetRadius = 1.55;
-        const scaleFactor = (targetRadius * 2) / (maxDim || 1);
-        model.scale.setScalar(scaleFactor);
-
-        earthGroup.add(model);
-
-        // Add 3D Pin Markers for Indian Cities
-        INDIAN_CITIES.forEach((city) => {
-          const pinPos = latLngToVector3(city.lat, city.lng, targetRadius * 1.01);
-
-          // Glowing Sphere Marker
-          const markerGeo = new THREE.SphereGeometry(0.035, 16, 16);
-          const markerMat = new THREE.MeshBasicMaterial({
-            color: new THREE.Color(city.color),
-          });
-          const markerMesh = new THREE.Mesh(markerGeo, markerMat);
-          markerMesh.position.copy(pinPos);
-          earthGroup.add(markerMesh);
-
-          // Outer beacon ring
-          const ringGeo = new THREE.RingGeometry(0.045, 0.065, 24);
-          const ringMat = new THREE.MeshBasicMaterial({
-            color: new THREE.Color(city.color),
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.6,
-          });
-          const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-          ringMesh.position.copy(pinPos);
-          ringMesh.lookAt(new THREE.Vector3(0, 0, 0));
-          earthGroup.add(ringMesh);
-        });
-
-        setIsLoading(false);
-      },
-      (xhr) => {
-        if (xhr.lengthComputable) {
-          const percent = Math.min(100, Math.round((xhr.loaded / xhr.total) * 100));
-          setLoadProgress(percent);
-        } else {
-          // Fallback based on 22.6MB expected file size
-          const estimatedTotal = 22669004;
-          const percent = Math.min(99, Math.round((xhr.loaded / estimatedTotal) * 100));
-          setLoadProgress(percent);
-        }
-      },
-      (error) => {
-        console.error('Error loading earth.glb model:', error);
-        setHasError(true);
-        setErrorMessage('Failed to load local 3D Earth GLB asset.');
-        setIsLoading(false);
-      }
-    );
-
-    // 10. Animation Loop
+    let isDisposed = false;
     const animate = () => {
       if (isDisposed) return;
       animFrameIdRef.current = requestAnimationFrame(animate);
-
       controls.update();
-
-      // Subtle rotation for atmospheric glow and star field
-      atmosphereMesh.rotation.y += 0.0004;
       starField.rotation.y -= 0.0001;
-
       renderer.render(scene, camera);
     };
     animate();
 
-    // 11. Resize handling
     const handleResize = () => {
       if (!container) return;
       width = container.clientWidth;
@@ -308,50 +194,25 @@ export const SplineAtmosphereScene: React.FC<SplineAtmosphereSceneProps> = ({
     };
     window.addEventListener('resize', handleResize);
 
-    // Cleanup
     return () => {
       isDisposed = true;
       window.removeEventListener('resize', handleResize);
-      canvas.removeEventListener('webglcontextlost', handleContextLost);
-      canvas.removeEventListener('webglcontextrestored', handleContextRestored);
-      if (animFrameIdRef.current) {
-        cancelAnimationFrame(animFrameIdRef.current);
-      }
+      if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
       controls.dispose();
-
-      // Recursive disposal of GLTF scene mesh, geometry, material, and textures
-      if (earthGroupRef.current) {
-        earthGroupRef.current.traverse((obj) => {
-          const mesh = obj as THREE.Mesh;
-          if (mesh.geometry) {
-            mesh.geometry.dispose();
-          }
-          if (mesh.material) {
-            const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-            materials.forEach((mat) => {
-              Object.keys(mat).forEach((key) => {
-                const prop = (mat as unknown as Record<string, unknown>)[key];
-                if (prop && typeof prop === 'object' && 'isTexture' in prop && Boolean(prop.isTexture)) {
-                  (prop as THREE.Texture).dispose();
-                }
-              });
-              mat.dispose();
-            });
-          }
-        });
-        earthGroupRef.current.clear();
-      }
-
+      earthGeo.dispose();
+      earthMat.dispose();
+      gridGeo.dispose();
+      gridMat.dispose();
+      atmosGeo.dispose();
+      atmosMat.dispose();
+      starGeo.dispose();
+      starMat.dispose();
       renderer.dispose();
-      starGeometry.dispose();
-      starMaterial.dispose();
-      atmosphereGeometry.dispose();
-      atmosphereMaterial.dispose();
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
     };
-  }, [modelUrl]);
+  }, [isAutoRotating]);
 
   return (
     <div className="relative w-full h-[500px] sm:h-[620px] rounded-3xl overflow-hidden border border-white/60 bg-gradient-to-b from-slate-950 via-slate-900 to-emerald-950 shadow-2xl backdrop-blur-xl select-none">
@@ -359,9 +220,9 @@ export const SplineAtmosphereScene: React.FC<SplineAtmosphereSceneProps> = ({
       <div className="absolute top-4 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-2 pointer-events-auto">
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/80 backdrop-blur-md border border-white/20 text-white text-xs font-semibold shadow-lg">
           <Globe className="w-4 h-4 text-emerald-400 animate-spin-slow" />
-          <span>3D Earth Atmosphere</span>
+          <span>3D Atmosphere & Station Network</span>
           <span className="hidden sm:inline-block px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30">
-            earth.glb (22.7 MB)
+            Realtime 60 FPS
           </span>
         </div>
 
@@ -419,70 +280,6 @@ export const SplineAtmosphereScene: React.FC<SplineAtmosphereSceneProps> = ({
           )}
         </div>
       </div>
-
-      {/* Loading Progress Bar HUD */}
-      {isLoading && webGLSupported && !hasError && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-10 bg-slate-950/80 backdrop-blur-md">
-          <div className="relative">
-            <div className="w-20 h-20 rounded-full border-4 border-emerald-500/20 border-t-emerald-400 animate-spin" />
-            <Layers className="w-8 h-8 text-emerald-400 absolute inset-0 m-auto" />
-          </div>
-          <h4 className="mt-5 text-base font-semibold text-white tracking-wide">
-            Loading High-Resolution 3D Earth...
-          </h4>
-          <p className="text-xs text-slate-400 mt-1">
-            Parsing <code className="text-emerald-300">earth.glb</code> geometry, textures, and atmospheric shaders
-          </p>
-
-          {/* Progress bar */}
-          <div className="w-64 bg-slate-800 rounded-full h-2.5 mt-4 overflow-hidden border border-white/10">
-            <div
-              className="bg-gradient-to-r from-emerald-500 to-teal-400 h-2.5 rounded-full transition-all duration-300"
-              style={{ width: `${Math.max(8, loadProgress)}%` }}
-            />
-          </div>
-          <span className="text-xs font-mono text-emerald-300 mt-2 font-semibold">
-            {loadProgress > 0 ? `${loadProgress}% downloaded` : 'Initializing WebGL...'}
-          </span>
-        </div>
-      )}
-
-      {/* WebGL Not Available Fallback */}
-      {!webGLSupported && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center text-white bg-gradient-to-br from-slate-950 to-emerald-950 z-10">
-          <AlertTriangle className="w-16 h-16 text-amber-400 mb-3" />
-          <h4 className="text-lg font-bold">Hardware Accelerated 3D Not Supported</h4>
-          <p className="text-xs text-slate-300 max-w-md mt-2 mb-4">
-            WebGL is disabled or unsupported on your browser. AIRiac continues providing full live air quality monitoring, maps, and AI assistance in 2D mode.
-          </p>
-          <div className="flex gap-2">
-            <span className="text-xs text-emerald-300 font-semibold bg-emerald-950/80 px-3 py-1.5 rounded-lg border border-emerald-500/30">
-              Live Pan-India AQI Active
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Model Load Error Fallback */}
-      {hasError && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center text-white bg-gradient-to-br from-slate-950 to-emerald-950 z-10">
-          <AlertTriangle className="w-14 h-14 text-rose-400 mb-3" />
-          <h4 className="text-base font-bold text-white">3D Earth Asset Notice</h4>
-          <p className="text-xs text-slate-300 max-w-md mt-1 mb-4">
-            {errorMessage || 'Unable to stream 3D model.'}
-          </p>
-          <button
-            onClick={() => {
-              setHasError(false);
-              setIsLoading(true);
-            }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow-lg transition-all"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Retry Loading Model
-          </button>
-        </div>
-      )}
 
       {/* Three.js Canvas Container */}
       <div ref={mountRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
