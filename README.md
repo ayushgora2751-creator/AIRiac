@@ -11,6 +11,35 @@
 
 ---
 
+## 🌟 Submission Overview
+
+### 1. Chosen Vertical
+* **Vertical**: **Smart Environmental Assistant & Public Health (Urban Air Quality Intelligence)**
+* **Persona & Target Users**: Urban citizens, vulnerable health demographics (asthmatic patients, elderly citizens, children, expectant mothers), outdoor commuters/runners, and municipal school athletic coordinators.
+* **Problem Addressed**: Air quality data is often presented as abstract, lagging citywide averages without actionable health context or route guidance. AIRiac bridges the gap between raw particulate sensor data and daily human decisions by delivering hyper-local, real-time guidance.
+
+### 2. Approach and Logic
+* **Deterministic CPCB NAQI Engine**: Implements the official 2014 Central Pollution Control Board (CPCB) piecewise linear interpolation algorithm across all 8 standard criteria pollutants ($PM_{2.5}$, $PM_{10}$, $NO_2$, $SO_2$, $CO$, $O_3$, $NH_3$, $Pb$), strictly enforcing the regulatory requirement of a minimum 3 pollutants with mandatory $PM_{2.5}$ or $PM_{10}$ before assigning an AQI band.
+* **Diurnal Peak & Dispersion Modeling**: Integrates ambient meteorological parameters (temperature, wind velocity, atmospheric pressure, relative humidity) with nocturnal inversion boundary dynamics to project 24-hour diurnal exposure trends.
+* **Contextual Inhalation Dosimetry**: Computes real-time mass particulate intake ($\mu g/hr$) customized to user activity intensity (resting: $0.5\,m^3/h$, walking: $1.2\,m^3/h$, jogging: $2.5\,m^3/h$, cycling: $3.0\,m^3/h$).
+* **Clean-Air Geospatial Routing**: Uses PostGIS spatial indexing across monitoring sectors to evaluate candidate navigation waypoints, computing pollution-weighted exposure cost matrices to suggest clean-air detour alternatives.
+* **Intelligent Dual-Engine Assistant**: Employs an LLM decision-support assistant powered by Google Gemini API with seamless deterministic rule-based fallback, delivering safety recommendations grounded in health science.
+
+### 3. How the Solution Works
+1. **Live Ambient Telemetry & Mock Ingestion**: Ingests high-frequency particulate readings from Chandigarh CAAQMS stations (Sector 22, Sector 25, Sector 53) via an abstract provider architecture supporting deterministic test fixtures and live OpenAQ / OpenWeather feeds.
+2. **Context-Aware Health Advisories**: Evaluates user profile attributes (health vulnerability status, daily commute mode, planned outdoor schedule) against current and forecasted NAQI tiers to generate tailored mitigation actions (e.g., N95 mask requirements, window ventilation windows, HEPA purifier runtimes).
+3. **Smart Exposure Tracker & Daily Planner**: Tracks accumulated particulate dosage over weekly cycles, notifying users before critical exposure limits are reached and suggesting optimal times of day for outdoor exercise.
+4. **Interactive Geospatial Dashboard & 3D Network View**: Renders real-time heatmaps on Leaflet with Indian NAQI color hexes, alongside a 60 FPS Three.js atmospheric simulation with station network beacon rings.
+5. **Community Reporting & Emergency Broadcast**: Enables citizens to report localized stubble or garbage burning hotspots with photo geotagging and dispatches instant email/webhook alerts during severe air quality spikes.
+
+### 4. Any Assumptions Made
+* **Regulatory Standard**: Calculations adhere to India’s CPCB National Air Quality Index (NAQI) 6-band standard ($0-50$: Good, $51-100$: Satisfactory, $101-200$: Moderate, $201-300$: Poor, $301-400$: Very Poor, $401-500$: Severe).
+* **Geographical Pilot**: Primary geospatial boundaries and station coordinates are calibrated for the Chandigarh Capital Region (Chandigarh UT, Mohali, Panchkula), but the modular backend architecture is fully pluggable for any global urban cluster.
+* **Sensor Validation & Minimum Pollutant Rule**: In accordance with CPCB mandates, an AQI score is only certified if at least 3 pollutants are reported and at least one is a particulate ($PM_{2.5}$ or $PM_{10}$). Incomplete telemetry falls back to sub-index prominent pollutant flags.
+* **Offline Determinism**: When external third-party API credentials are not provisioned or network sockets are restricted during testing, the platform operates deterministically through time-seeded mathematical mock providers with zero external network socket leakage.
+
+---
+
 ## 1. System Architecture Overview
 
 AIRiac is organized as an enterprise-grade monorepo featuring a 13-app modular Django REST Framework backend with PostGIS spatial storage, Celery background workers, Redis caching, and a modern React 18 TypeScript frontend with interactive Leaflet mapping and Recharts diurnal trend visualization.
