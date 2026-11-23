@@ -8,7 +8,7 @@ interface ScrollVideoBackgroundProps {
 }
 
 export const ScrollVideoBackground: React.FC<ScrollVideoBackgroundProps> = ({
-  totalFrames = 300,
+  totalFrames = 60,
   framePrefix = '/frames/ezgif-frame-',
   frameExtension = '.jpg',
   overlayOpacity = 0.35,

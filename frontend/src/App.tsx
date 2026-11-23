@@ -105,9 +105,9 @@ export const App: React.FC = () => {
 
   return (
     <div className="relative min-h-screen flex flex-col text-slate-900 selection:bg-emerald-500 selection:text-white">
-      {/* 300-Frame Scroll-Driven Video Background */}
+      {/* 60-Frame Scroll-Driven Video Background */}
       <ScrollVideoBackground
-        totalFrames={300}
+        totalFrames={60}
         framePrefix="/frames/ezgif-frame-"
         frameExtension=".jpg"
         overlayOpacity={0.25}

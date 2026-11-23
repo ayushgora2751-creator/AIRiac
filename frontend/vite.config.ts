@@ -22,7 +22,20 @@ export default defineConfig({
     },
   },
   build: {
-    emptyOutDir: false,
+    target: 'es2020',
+    emptyOutDir: true,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-three': ['three'],
+          'vendor-charts': ['recharts'],
+          'vendor-maps': ['leaflet', 'react-leaflet'],
+          'vendor-query': ['@tanstack/react-query', 'axios'],
+        },
+      },
+    },
   },
   test: {
     globals: true,
